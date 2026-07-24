@@ -33,7 +33,10 @@ static constexpr int STOP_TIMEOUT_MS = 5000;
 RcloneRc::RcloneRc(std::string addr, int port)
     : m_base_url(std::format("http://{}:{}", addr, port)) {
     m_session = soup_session_new();
-    g_object_set(m_session, "timeout", 5u, nullptr);
+    // rcd can be slow to answer polling calls (job/status, core/stats) while it's
+    // busy doing CPU/IO-heavy work for another job, e.g. checksum hashing during a
+    // bisync — 5s was tight enough to spuriously trip during that.
+    g_object_set(m_session, "timeout", 20u, nullptr);
 
     // Mirror RcloneCli's config path logic so rclone rcd also bypasses Flatpak's
     // $XDG_CONFIG_HOME redirect and reads the real user config.
@@ -433,11 +436,15 @@ void RcloneRc::bisync_async(const std::string& path1, const std::string& path2,
     json body = {
         {"path1", path1},
         {"path2", path2},
-        {"_async", true}
+        {"_async", true},
+        // rclone's sync/bisync RC handler doesn't apply the --check-sync CLI
+        // default when the param is omitted from the RC body — it decodes to
+        // "" and rejects it with "unknown check-sync mode for bisync".
+        {"checkSync", "true"}
     };
     if (!opts.empty()) body.update(opts);
 
-    rc_post("bisync/bisync", body, [callback = std::move(callback)](auto result) {
+    rc_post("sync/bisync", body, [callback = std::move(callback)](auto result) {
         if (!result.has_value()) {
             callback(std::unexpected(result.error()));
             return;
@@ -533,6 +540,8 @@ void RcloneRc::job_status(int64_t jobid, AsyncCallback<JobStatus> callback) {
         status.finished = j.value("finished", false);
         status.success = j.value("success", false);
         status.error = j.value("error", std::string{});
+        if (j.contains("output") && j["output"].is_object())
+            status.output_log = j["output"].value("output", std::string{});
         callback(std::move(status));
     });
 }

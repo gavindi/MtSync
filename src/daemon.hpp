@@ -47,7 +47,8 @@ private:
     void schedule_all_jobs();
     void schedule_job(size_t index);
     void on_run_job(size_t index);
-    void on_job_completed(size_t index, bool success, const std::string& error_msg = "");
+    void on_job_completed(size_t index, bool success, const std::string& error_msg = "",
+                           const std::string& output_log = "");
 
     struct JobState {
         sigc::connection  poll_timer;
@@ -56,7 +57,10 @@ private:
         int64_t           job_id         = -1;
         uint8_t           submitting     = 0; // on_run_job called but RC hasn't returned ID yet
         uint8_t           poll_in_flight = 0; // poll HTTP request pending, skip next tick
+        int               poll_failures  = 0; // consecutive failed status polls; job may still be alive on rcd
         int               retry_count    = 0;
+        bool              bisync_force_resync   = false; // consumed once by on_run_job to add resync:true
+        bool              bisync_resync_retried = false; // single-shot guard against retry loops
         rclone::SyncStats last_stats;
     };
 
