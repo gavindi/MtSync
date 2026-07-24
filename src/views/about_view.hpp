@@ -20,6 +20,7 @@
 
 #include "daemon_proxy.hpp"
 #include "rclone/rclone_manager.hpp"
+#include "settings.hpp"
 #include <cairo.h>
 #include <gtkmm.h>
 
@@ -27,12 +28,14 @@ namespace mtsync {
 
 class AboutView : public Gtk::Box {
 public:
-    explicit AboutView(rclone::RcloneManager& manager, DaemonProxy* daemon_proxy);
+    explicit AboutView(rclone::RcloneManager& manager, DaemonProxy* daemon_proxy,
+                        Settings& settings);
     ~AboutView() override;
 
 private:
     rclone::RcloneManager& m_manager;
     DaemonProxy*           m_daemon_proxy         = nullptr;
+    Settings&               m_settings;
     Gtk::Label*            m_rclone_version_label = nullptr;
     Gtk::Label*            m_status_label         = nullptr;
     Gtk::DrawingArea*      m_logo_area            = nullptr;

@@ -17,6 +17,7 @@
  */
 
 #include "views/about_view.hpp"
+#include "views/welcome_dialog.hpp"
 #include "widgets/adw_wrapper.hpp"
 #include <adwaita.h>
 #include <cstring>
@@ -42,10 +43,12 @@ cairo_status_t png_read_func(void* closure, unsigned char* data, unsigned int le
 
 } // namespace
 
-AboutView::AboutView(rclone::RcloneManager& manager, DaemonProxy* daemon_proxy)
+AboutView::AboutView(rclone::RcloneManager& manager, DaemonProxy* daemon_proxy,
+                      Settings& settings)
     : Gtk::Box(Gtk::Orientation::VERTICAL)
     , m_manager(manager)
-    , m_daemon_proxy(daemon_proxy) {
+    , m_daemon_proxy(daemon_proxy)
+    , m_settings(settings) {
     load_spritesheet();
     setup_ui();
 }
@@ -140,6 +143,18 @@ void AboutView::setup_ui() {
     desc_label->add_css_class("dim-label");
     desc_label->set_halign(Gtk::Align::CENTER);
     header->append(*desc_label);
+
+    auto* tour_btn = Gtk::make_managed<Gtk::Button>("Quick Start Tour");
+    tour_btn->add_css_class("pill");
+    tour_btn->set_halign(Gtk::Align::CENTER);
+    tour_btn->set_margin_top(6);
+    tour_btn->signal_clicked().connect([this]() {
+        auto* welcome = Gtk::make_managed<WelcomeDialog>(m_settings);
+        if (auto* win = dynamic_cast<Gtk::Window*>(get_root()))
+            welcome->set_transient_for(*win);
+        welcome->present();
+    });
+    header->append(*tour_btn);
 
     vbox->append(*header);
 

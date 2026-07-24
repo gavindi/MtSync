@@ -322,4 +322,32 @@ inline void status_page_set_child(Gtk::Widget* page, Gtk::Widget* child) {
     adw_status_page_set_child(ADW_STATUS_PAGE(page->gobj()), child->gobj());
 }
 
+// --- Carousel ---
+
+inline AdwCarousel* carousel_new() {
+    return ADW_CAROUSEL(adw_carousel_new());
+}
+
+inline Gtk::Widget* carousel_widget(AdwCarousel* carousel) {
+    return Glib::wrap(GTK_WIDGET(carousel));
+}
+
+inline void carousel_append(AdwCarousel* carousel, Gtk::Widget* child) {
+    adw_carousel_append(carousel, child->gobj());
+}
+
+inline void carousel_scroll_to(AdwCarousel* carousel, Gtk::Widget* child, bool animate) {
+    adw_carousel_scroll_to(carousel, child->gobj(), animate ? TRUE : FALSE);
+}
+
+inline guint carousel_get_n_pages(AdwCarousel* carousel) {
+    return adw_carousel_get_n_pages(carousel);
+}
+
+inline Gtk::Widget* carousel_indicator_dots(AdwCarousel* carousel) {
+    auto* w = adw_carousel_indicator_dots_new();
+    adw_carousel_indicator_dots_set_carousel(ADW_CAROUSEL_INDICATOR_DOTS(w), carousel);
+    return Glib::wrap(GTK_WIDGET(w));
+}
+
 } // namespace adw
