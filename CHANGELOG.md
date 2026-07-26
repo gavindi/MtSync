@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.14 — Bisync Fixes
+## 0.9.14 — Post release fixes for user found bugs
 
 - **Bisync RC endpoint typo**: `RcloneRc::bisync_async` posted to `"bisync/bisync"`, which doesn't exist — rclone registers bisync under the `sync` RC group as `sync/bisync`, matching its siblings `sync/sync`, `sync/copy`, `sync/move`; every bi-directional sync job failed immediately with `couldn't find method "bisync/bisync"`
 - **Missing `checkSync` default**: rclone's `sync/bisync` RC handler doesn't apply the `--check-sync` CLI default (`true`) when the `checkSync` param is omitted from the RC body — it decoded to the Go zero value `""` and rejected the request with `unknown check-sync mode for bisync: ""`; `bisync_async` now sends `checkSync: "true"` explicitly
@@ -11,6 +11,7 @@
 - **Quickstart guide**: added `QUICKSTART.md` — a condensed five-minute setup path (add a remote, browse-and-prefill a job, job types at a glance, run/schedule, bisync gotchas) that links out to `User_Manual.md` for full reference detail
 - **About tab version bump**: the version shown on the About tab was a hardcoded literal, independent of `CMakeLists.txt`'s `PROJECT_VERSION` (which only feeds the CPack package filename) and had drifted stale at `0.9.13`; updated to `0.9.14-pre`
 - **Browse tab: no feedback on remote connection failure**: switching the Browse tab's remote dropdown to an unreachable remote left the file pane stuck on the loading spinner — `RcloneCli::lsjson` had no timeout and relied on rclone's own defaults (60s `contimeout` × 10 low-level-retries), and once it did fail, `BrowserPane::navigate()` funnelled the error into the same `"empty"` state page as a genuinely empty folder, discarding the error text entirely. `lsjson` now passes `--contimeout 10s --timeout 15s --low-level-retries 1` so a hung remote fails within seconds, and a new `"error"` content-stack page (`AdwStatusPage`, "Unable to Connect") shows rclone's actual error message; the Refresh button stays enabled on this page so the user can retry
+- **Jobs tab: activity log now vertically resizable**: the "Activity Log" section was a `Gtk::ScrolledWindow` with a hardcoded 160px height, fixed below the job list behind a static separator — `JobView`'s layout now splits the job list and log with a draggable `Gtk::Paned` (following the pattern already used in `BrowserView`), with 150px/80px minimums on each side so neither can be dragged away entirely; the log's `ScrolledWindow` also gained `set_vexpand(true)`, without which the surrounding `Gtk::Box` left the extra space blank instead of handing it to the `Gtk::ColumnView` — so growing the pane visually did nothing until this was added. On window resize, the log (not the job list) absorbs the extra height, via `set_resize_start_child(false)` / `set_resize_end_child(true)`
 
 ## 0.9.13 — Tray "Open" Fix
 

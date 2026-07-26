@@ -48,6 +48,7 @@ private:
     Gtk::Widget* m_group_move  = nullptr;
     Gtk::Widget* m_group_mount = nullptr;
 
+    Gtk::Paned                                 m_paned;
     Gtk::ScrolledWindow                        m_log_scroll;
     Gtk::ColumnView*                           m_log_column_view = nullptr;
     Glib::RefPtr<Gio::ListStore<LogEntry>>     m_log_store;
