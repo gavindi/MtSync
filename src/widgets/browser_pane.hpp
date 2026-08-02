@@ -72,6 +72,7 @@ private:
     Gtk::Stack*   m_content_stack    = nullptr;
     Gtk::Widget*  m_no_remote_status = nullptr;
     Gtk::Widget*  m_empty_status     = nullptr;
+    Gtk::Widget*  m_error_status     = nullptr;
 
     // File list model
     Glib::RefPtr<Gio::ListStore<FileObject>> m_list_store;

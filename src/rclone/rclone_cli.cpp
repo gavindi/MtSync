@@ -250,7 +250,12 @@ void RcloneCli::authorize(const std::string& backend,
 
 void RcloneCli::lsjson(const std::string& remote_path,
                         AsyncCallback<std::vector<FileEntry>> callback) {
-    run_command({"lsjson", remote_path}, [callback = std::move(callback)](
+    // Bound how long a browse-tab listing can hang on an unreachable remote —
+    // rclone's own defaults (60s contimeout x 10 low-level-retries) can otherwise
+    // leave the UI stuck on "loading" for several minutes before failing.
+    run_command({"lsjson", remote_path,
+                 "--contimeout", "10s", "--timeout", "15s", "--low-level-retries", "1"},
+                [callback = std::move(callback)](
         const std::string& out, const std::string& err, int code) {
         if (code != 0) {
             callback(std::unexpected("lsjson failed: " + err));

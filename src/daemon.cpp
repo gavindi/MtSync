@@ -586,6 +586,23 @@ void MtSyncDaemon::on_run_job(size_t index) {
     }
     if (job.type == rclone::JobType::Sync) {
         opts["createEmptySrcDirs"] = true;
+        // bisync refuses to run without an established baseline ("path1 and path2
+        // are out of sync, run --resync to recover"). Rather than guessing whether
+        // one exists, let a normal run fail first and reactively retry once with
+        // resync — see on_job_completed. Forcing resync proactively on every run
+        // (the previous approach) re-establishes the baseline from scratch each
+        // time, which can undo since-propagated deletes and misfire the bisync
+        // "too many deletes" safety check.
+        if (index < m_job_state.size() && m_job_state[index].bisync_force_resync) {
+            opts["resync"] = true;
+            m_job_state[index].bisync_force_resync = false;
+        }
+        // rclone's sync/bisync RC handler doesn't apply the CLI --max-delete
+        // default (50%) when the param is omitted — it behaves as 0%, so any
+        // deletion at all trips the safety abort. maxDelete itself is also
+        // ignored over RC regardless of value, so the only way to allow
+        // deletions through is the job's explicit opt-in "force" flag.
+        if (job.bisync && job.bisync_force_deletes) opts["force"] = true;
     }
     if (!job.includes.empty()) {
         json filter = json::array();
@@ -730,12 +747,24 @@ void MtSyncDaemon::on_run_job(size_t index) {
                     if (index >= m_job_state.size() || m_job_state[index].job_id < 0) return;
                     m_job_state[index].poll_in_flight = false;
                     if (!status.has_value()) {
+                        // A single missed poll doesn't mean the job died — rcd can be slow to
+                        // answer while it's CPU/IO-busy (e.g. hashing files for a checksummed
+                        // bisync). Only give up after several consecutive failures; otherwise
+                        // the daemon resubmits a brand-new job while the original is still
+                        // running, which for bisync collides on its workdir lock.
+                        if (++m_job_state[index].poll_failures < 6) {
+                            g_warning("Job %zu status poll failed (%d/6): %s",
+                                index, m_job_state[index].poll_failures, status.error().c_str());
+                            return;
+                        }
                         on_job_completed(index, false, "rclone rcd unreachable");
                         return;
                     }
+                    m_job_state[index].poll_failures = 0;
                     if (status->finished) {
                         on_job_completed(index, status->success,
-                            status->success ? std::string{} : status->error);
+                            status->success ? std::string{} : status->error,
+                            status->success ? std::string{} : status->output_log);
                         return;
                     }
                     // Job still running — fetch stats for progress display
@@ -779,7 +808,8 @@ void MtSyncDaemon::on_run_job(size_t index) {
     }
 }
 
-void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::string& error_msg) {
+void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::string& error_msg,
+                                     const std::string& output_log) {
     // Atomically claim ownership: if the job_id is already cleared, another
     // completion path beat us here (duplicate from overlapping poll cycles).
     if (index >= m_job_state.size() || m_job_state[index].job_id < 0) return;
@@ -791,6 +821,35 @@ void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::strin
     m_job_state[index].poll_timer.disconnect();
 
     auto settings = load_settings();
+    // bisync's top-level error is a generic "bisync aborted" shared by several
+    // distinct causes (missing baseline, empty-directory abort, too-many-deletes
+    // safety abort), so the specific reason has to come from the captured log
+    // text instead. Only the "no prior listings" phrasing is safe to
+    // auto-recover from — other aborts (too many deletes, empty directory) are
+    // deliberate safety checks that resyncing could silently defeat (e.g. by
+    // resurrecting files the user just deleted), so they're surfaced as-is.
+    if (!success && index < m_jobs.size() && m_jobs[index].bisync
+        && !m_job_state[index].bisync_resync_retried
+        && output_log.find("cannot find prior Path1 or Path2 listings") != std::string::npos) {
+        // bisync has no established baseline for this pair yet (fresh pair, or an
+        // interrupted prior run). Retry once immediately with resync — outside the
+        // normal retry/backoff path so it doesn't consume the job's configured
+        // retry budget and isn't delayed by exponential backoff.
+        m_job_state[index].bisync_resync_retried = true;
+        m_job_state[index].bisync_force_resync = true;
+        append_log(std::format("RETRYING  {} [{}] with --resync (no established bisync baseline)",
+            m_jobs[index].id, type_str(m_jobs[index].type)));
+        std::string retry_uuid = m_jobs[index].id;
+        Glib::signal_idle().connect_once([this, index, retry_uuid]() {
+            if (index >= m_jobs.size() || m_jobs[index].id != retry_uuid) return;
+            on_run_job(index);
+        });
+        // Balance the increment from on_run_job; the retry re-increments when it starts.
+        m_running_job_count--;
+        if (m_running_job_count < 0) m_running_job_count = 0;
+        update_tray_animation();
+        return;
+    }
     if (!success && index < m_jobs.size()) {
         int max_retries = (m_jobs[index].retries >= 0)
             ? m_jobs[index].retries

@@ -129,6 +129,12 @@ BrowserPane::BrowserPane(rclone::RcloneManager& manager)
     adw::status_page_set_description(m_empty_status, "This directory contains no files.");
     m_content_stack->add(*m_empty_status, "empty");
 
+    m_error_status = adw::status_page();
+    adw::status_page_set_icon_name(m_error_status, "network-error-symbolic");
+    adw::status_page_set_title(m_error_status, "Unable to Connect");
+    adw::status_page_set_description(m_error_status, "The remote did not respond. Check the connection and try again.");
+    m_content_stack->add(*m_error_status, "error");
+
     build_column_view();
     auto* file_scroll = Gtk::make_managed<Gtk::ScrolledWindow>();
     file_scroll->set_vexpand(true);
@@ -457,7 +463,8 @@ void BrowserPane::navigate(const std::string& path) {
         if (gen != m_load_generation) return;
         if (!result.has_value()) {
             if (m_status_label) m_status_label->set_text("");
-            show_content_state("empty");
+            adw::status_page_set_description(m_error_status, result.error().c_str());
+            show_content_state("error");
             return;
         }
         m_list_store->remove_all();

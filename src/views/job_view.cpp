@@ -69,7 +69,8 @@ const char* type_icon(rclone::JobType t) {
 
 JobView::JobView(DaemonProxy* daemon_proxy)
     : Gtk::Box(Gtk::Orientation::VERTICAL)
-    , m_daemon_proxy(daemon_proxy) {
+    , m_daemon_proxy(daemon_proxy)
+    , m_paned(Gtk::Orientation::VERTICAL) {
 
     auto config_dir = fs::path(g_get_user_config_dir()) / "mtsync";
     fs::create_directories(config_dir);
@@ -77,7 +78,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
 
     m_scroll.set_vexpand(true);
     m_scroll.set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
-    append(m_scroll);
+    m_scroll.set_size_request(-1, 150);
 
     auto* clamp = Glib::wrap(GTK_WIDGET(adw_clamp_new()));
     adw_clamp_set_maximum_size(ADW_CLAMP(clamp->gobj()), 600);
@@ -123,9 +124,6 @@ JobView::JobView(DaemonProxy* daemon_proxy)
     }
 
     // Log section
-    auto* separator = Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL);
-    append(*separator);
-
     auto* log_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
 
     auto* log_header = Gtk::make_managed<Gtk::Label>("Activity Log");
@@ -286,12 +284,29 @@ JobView::JobView(DaemonProxy* daemon_proxy)
 
     m_log_scroll.set_child(*m_log_column_view);
     m_log_scroll.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
-    m_log_scroll.set_size_request(-1, 160);
+    m_log_scroll.set_size_request(-1, 80);
+    m_log_scroll.set_vexpand(true);
     log_box->append(m_log_scroll);
 
-    append(*log_box);
+    m_paned.set_vexpand(true);
+    m_paned.set_wide_handle(true);
+    m_paned.set_start_child(m_scroll);
+    m_paned.set_end_child(*log_box);
+    m_paned.set_shrink_start_child(false);
+    m_paned.set_shrink_end_child(false);
+    m_paned.set_resize_start_child(false);
+    m_paned.set_resize_end_child(true);
+    append(m_paned);
 
-    signal_map().connect([this]() { load_jobs(); rebuild_ui(); refresh_log(); });
+    signal_map().connect([this]() {
+        load_jobs();
+        rebuild_ui();
+        refresh_log();
+        Glib::signal_idle().connect_once([this]() {
+            int height = m_paned.get_height();
+            m_paned.set_position(height > 0 ? height - 200 : 400);
+        });
+    });
 }
 
 JobView::~JobView() {

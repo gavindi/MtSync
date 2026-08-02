@@ -185,6 +185,15 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     if (m_editing) adw::switch_row_set_active(m_bisync_switch, m_editing->bisync);
     adw::preferences_group_add(group, m_bisync_switch);
 
+    // Force delete propagation (Bi-directional sync only)
+    m_bisync_force_switch = adw::switch_row();
+    adw::preferences_row_set_title(m_bisync_force_switch, "Force Deletes");
+    m_bisync_force_switch->set_tooltip_text("Allow bi-directional sync to propagate deletions. rclone's delete-safety check is unreliable when run this way, so without this enabled ANY deletion on either side — even a single file — will block the sync until you intervene manually. Enabling this removes that protection entirely, including for large accidental deletions.");
+    m_bisync_force_switch->set_visible(initial_type == rclone::JobType::Sync
+        && m_bisync_switch->get_visible() && adw::switch_row_get_active(m_bisync_switch));
+    if (m_editing) adw::switch_row_set_active(m_bisync_force_switch, m_editing->bisync_force_deletes);
+    adw::preferences_group_add(group, m_bisync_force_switch);
+
     // Enable Checksum
     m_enable_checksum_switch = adw::switch_row();
     adw::preferences_row_set_title(m_enable_checksum_switch, "Enable Checksum");
@@ -532,12 +541,22 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
             auto* self = static_cast<JobEditDialog*>(data);
             guint sel = adw::combo_row_get_selected(self->m_type_combo);
             self->m_bisync_switch->set_visible(sel == 0);             // Sync only
+            self->m_bisync_force_switch->set_visible(sel == 0
+                && adw::switch_row_get_active(self->m_bisync_switch));
             self->m_mount_startup_switch->set_visible(sel == 3);      // Mount only
             self->m_cache_mode_row->set_visible(sel == 3);            // Mount only
             self->m_includes_entry->set_visible(sel != 3);            // Not for Mount
             self->m_dry_run_switch->set_visible(sel != 3);            // Not for Mount
             self->m_enable_checksum_switch->set_visible(sel != 3);    // Not for Mount
             self->set_default_size(460, 1);
+        }), this);
+
+    // Bi-directional sync switch → show/hide dependent Force Deletes row
+    g_signal_connect(m_bisync_switch->gobj(), "notify::active",
+        G_CALLBACK(+[](GObject*, GParamSpec*, gpointer data) {
+            auto* self = static_cast<JobEditDialog*>(data);
+            self->m_bisync_force_switch->set_visible(self->m_bisync_switch->get_visible()
+                && adw::switch_row_get_active(self->m_bisync_switch));
         }), this);
 
     // Schedule switch → update button label and save visibility
@@ -714,6 +733,8 @@ rclone::Job JobEditDialog::build_job() const {
     job.dry_run         = adw::switch_row_get_active(m_dry_run_switch);
     job.bisync          = m_bisync_switch->get_visible()
                        && adw::switch_row_get_active(m_bisync_switch);
+    job.bisync_force_deletes = job.bisync
+                       && adw::switch_row_get_active(m_bisync_force_switch);
     job.ignore_checksum = !adw::switch_row_get_active(m_enable_checksum_switch);
     job.bandwidth       = adw::entry_row_get_text(m_bandwidth_entry);
     try { job.parallel_transfers = std::stoi(adw::entry_row_get_text(m_parallel_transfers_entry)); }

@@ -102,6 +102,7 @@ struct JobStatus {
     bool finished = false;
     bool success = false;
     std::string error;
+    std::string output_log; // raw captured log text, e.g. bisync's detailed abort reason
 };
 
 enum class JobType { Sync, Copy, Move, Mount };
@@ -120,6 +121,7 @@ struct Job {
     std::string destination;
     bool        dry_run          = false;
     bool        bisync           = false;
+    bool        bisync_force_deletes = false; // bypass bisync's delete-safety abort (bisync jobs only)
     bool        ignore_checksum  = true;
     std::string bandwidth;
     bool        schedule_enabled  = false;
@@ -142,7 +144,7 @@ struct Job {
 };
 
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Job,
-    id, type, source, destination, dry_run, bisync, ignore_checksum, bandwidth,
+    id, type, source, destination, dry_run, bisync, bisync_force_deletes, ignore_checksum, bandwidth,
     schedule_enabled, mount_at_startup, active, running, vfs_cache_mode,
     cron_minute, cron_hour, cron_day, cron_month, cron_weekday,
     last_start, last_run, last_status, includes, parallel_transfers, retries,
