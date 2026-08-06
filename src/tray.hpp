@@ -24,6 +24,7 @@
 #include <sigc++/sigc++.h>
 #include <string>
 #include <array>
+#include <memory>
 #include <vector>
 
 namespace mtsync {
@@ -65,6 +66,7 @@ private:
     int              m_anim_frame = 0;
     bool             m_animating  = false;
     sigc::connection m_anim_timer;
+    std::shared_ptr<bool> m_alive = std::make_shared<bool>(true);
     std::array<std::vector<uint8_t>, ANIM_FRAMES> m_frames;
     std::vector<uint8_t> m_idle_icon;
     cairo_surface_t* m_idle_surface = nullptr;

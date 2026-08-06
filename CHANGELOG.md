@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.15 — Tray Animation Use-After-Free Fix
+
+- **Use-after-free in the tray animation timer on daemon shutdown**: `TrayIcon`'s 100 ms animation timer was connected with a lambda capturing `this` in `start_animation()`, but `~TrayIcon()` never disconnected it — a `sigc::connection`'s destructor does not remove the glibmm timeout source, so when the daemon was stopped (SIGTERM, tray "Quit", IPC `quit`) while a non-mount job was running and the spinner animating, the source fired the callback on the already-destroyed `TrayIcon`, dereferencing freed members (`m_anim_frame`, `m_connection`). The destructor now calls `m_anim_timer.disconnect()` and clears a new `m_alive` shared-ptr sentinel that the timer lambda captures and checks before touching any state — even if the timer ever fires after destruction, it bails out without dereferencing the object. Confirmed under ASan: the pre-fix daemon aborted with `heap-use-after-free` in the `start_animation()` timer callback on every shutdown-while-animating run; the fixed daemon exits cleanly
+- **About tab version bump**: the version shown on the About tab was still `0.9.14-pre`; updated to `0.9.15`
+
 ## 0.9.14 — Bisync Fixes
 
 - **Bisync RC endpoint typo**: `RcloneRc::bisync_async` posted to `"bisync/bisync"`, which doesn't exist — rclone registers bisync under the `sync` RC group as `sync/bisync`, matching its siblings `sync/sync`, `sync/copy`, `sync/move`; every bi-directional sync job failed immediately with `couldn't find method "bisync/bisync"`
