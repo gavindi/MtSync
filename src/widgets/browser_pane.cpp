@@ -20,6 +20,7 @@
 #include "sandbox.hpp"
 #include <adwaita.h>
 #include <format>
+#include <glibmm/markup.h>
 #include <unordered_map>
 
 namespace mtsync {
@@ -463,7 +464,15 @@ void BrowserPane::navigate(const std::string& path) {
         if (gen != m_load_generation) return;
         if (!result.has_value()) {
             if (m_status_label) m_status_label->set_text("");
-            adw::status_page_set_description(m_error_status, result.error().c_str());
+            if (m_is_local) {
+                adw::status_page_set_icon_name(m_error_status, "dialog-error-symbolic");
+                adw::status_page_set_title(m_error_status, "Unable to Read Directory");
+            } else {
+                adw::status_page_set_icon_name(m_error_status, "network-error-symbolic");
+                adw::status_page_set_title(m_error_status, "Unable to Connect");
+            }
+            adw::status_page_set_description(m_error_status,
+                Glib::Markup::escape_text(result.error()).c_str());
             show_content_state("error");
             return;
         }
