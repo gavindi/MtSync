@@ -1,14 +1,38 @@
-name: Build Packages
+name: Release
 
 on:
-  push:
-    branches:
-      - build
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to build and release (e.g. 0.9.99)"
+        required: true
 
 jobs:
-  # ── DEB ────────────────────────────────────────────────────────────────────
-  build-deb:
-    name: Build DEB (Ubuntu ${{ matrix.ubuntu }})
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Verify CMakeLists.txt and snapcraft.yaml match the release tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          CMAKE_VERSION=$(grep -oP '(?<=VERSION )\d+\.\d+\.\d+' CMakeLists.txt | head -1)
+          SNAP_VERSION=$(grep -oP "(?<=version: ')[^']+" snap/snapcraft.yaml | head -1)
+          FAILED=0
+          if [[ "$CMAKE_VERSION" != "$TAG" ]]; then
+            echo "::error::CMakeLists.txt PROJECT_VERSION ($CMAKE_VERSION) does not match release tag ($TAG)"
+            FAILED=1
+          fi
+          if [[ "$SNAP_VERSION" != "$TAG" ]]; then
+            echo "::error::snap/snapcraft.yaml version ($SNAP_VERSION) does not match release tag ($TAG)"
+            FAILED=1
+          fi
+          exit "$FAILED"
+
+  deb:
+    needs: check-version
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -17,6 +41,8 @@ jobs:
       image: ubuntu:${{ matrix.ubuntu }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Install build dependencies
         run: |
@@ -36,23 +62,27 @@ jobs:
         run: cmake --build build --parallel $(nproc)
 
       - name: Package
+        env:
+          TAG: ${{ inputs.tag }}
+          UBUNTU: ${{ matrix.ubuntu }}
         run: |
           cd build && cpack -G DEB
-          mv *.deb mtsync_$(grep -oP '(?<=VERSION )\d+\.\d+\.\d+' ../CMakeLists.txt | head -1)_ubuntu${{ matrix.ubuntu }}_$(uname -m).deb
+          mv *.deb "mtsync_${TAG}_ubuntu${UBUNTU}_$(uname -m).deb"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mtsync-deb-ubuntu-${{ matrix.ubuntu }}
+          name: deb-ubuntu-${{ matrix.ubuntu }}
           path: build/*.deb
 
-  # ── RPM ────────────────────────────────────────────────────────────────────
-  build-rpm:
-    name: Build RPM
+  rpm:
+    needs: check-version
     runs-on: ubuntu-24.04
     container:
       image: fedora:41
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Install build dependencies
         run: |
@@ -72,21 +102,24 @@ jobs:
         run: cmake --build build --parallel $(nproc)
 
       - name: Package
+        env:
+          TAG: ${{ inputs.tag }}
         run: |
           cd build && cpack -G RPM
-          mv *.rpm mtsync_$(grep -oP '(?<=VERSION )\d+\.\d+\.\d+' ../CMakeLists.txt | head -1)_$(. /etc/os-release && echo ${ID}${VERSION_ID})_$(uname -m).rpm
+          mv *.rpm "mtsync_${TAG}_$(. /etc/os-release && echo ${ID}${VERSION_ID})_$(uname -m).rpm"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mtsync-rpm
+          name: rpm
           path: build/*.rpm
 
-  # ── AppImage ───────────────────────────────────────────────────────────────
-  build-appimage:
-    name: Build AppImage
+  appimage:
+    needs: check-version
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Install build dependencies
         run: |
@@ -116,14 +149,10 @@ jobs:
             https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh
           chmod +x linuxdeploy linuxdeploy-plugin-gtk.sh
 
-      - name: Get version
-        id: version
-        run: echo "version=$(grep -oP '(?<=VERSION )\d+\.\d+\.\d+' CMakeLists.txt | head -1)" >> $GITHUB_OUTPUT
-
       - name: Create AppImage
         env:
           DEPLOY_GTK_VERSION: 4
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ inputs.tag }}
         run: |
           ./linuxdeploy \
             --appdir AppDir \
@@ -133,15 +162,16 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mtsync-appimage
+          name: appimage
           path: "*.AppImage"
 
-  # ── Flatpak ────────────────────────────────────────────────────────────────
-  build-flatpak:
-    name: Build Flatpak
+  flatpak:
+    needs: check-version
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - name: Install flatpak and flatpak-builder
         run: |
@@ -150,32 +180,58 @@ jobs:
           sudo flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
           sudo flatpak install -y --noninteractive flathub org.gnome.Platform/x86_64/48 org.gnome.Sdk/x86_64/48
 
-      - name: Get version
-        id: version
-        run: echo "version=$(grep -oP '(?<=VERSION )\d+\.\d+\.\d+' CMakeLists.txt | head -1)" >> $GITHUB_OUTPUT
-
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6
         with:
-          bundle: mtsync_${{ steps.version.outputs.version }}_x86_64.flatpak
+          bundle: mtsync_${{ inputs.tag }}_x86_64.flatpak
           manifest-path: packaging/com.mtsync.MtSync.yml
           cache-key: flatpak-builder-${{ github.sha }}
           upload-artifact: false
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mtsync-flatpak
-          path: mtsync_${{ steps.version.outputs.version }}_x86_64.flatpak
+          name: flatpak
+          path: mtsync_${{ inputs.tag }}_x86_64.flatpak
 
-  # ── Snap ───────────────────────────────────────────────────────────────────
-  build-snap:
-    name: Build Snap
+  snap:
+    needs: check-version
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
 
       - uses: snapcore/action-build@v1
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mtsync-snap
+          name: snap
           path: "*.snap"
+
+  release:
+    needs: [deb, rpm, appimage, flatpak, snap]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          awk -v ver="$TAG" '
+            $0 ~ "^## " ver " " { found=1; print; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: MtSync ${{ inputs.tag }}
+          body_path: release-notes.md
+          files: dist/**/*

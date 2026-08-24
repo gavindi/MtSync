@@ -18,6 +18,7 @@
 
 #include "application.hpp"
 #include "window.hpp"
+#include "views/welcome_dialog.hpp"
 #include "widgets/adw_wrapper.hpp"
 #include <glib.h>
 #include <glibmm.h>
@@ -94,6 +95,12 @@ void MtSyncApplication::on_activate() {
     }
     if (m_force_show || !first_create || !m_settings.start_minimized)
         m_window->present();
+
+    if (first_create && m_settings.show_welcome_on_startup) {
+        auto* welcome = Gtk::make_managed<WelcomeDialog>(m_settings);
+        welcome->set_transient_for(*m_window);
+        welcome->present();
+    }
 }
 
 } // namespace mtsync

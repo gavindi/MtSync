@@ -507,6 +507,8 @@ TrayIcon::TrayIcon() {
 }
 
 TrayIcon::~TrayIcon() {
+    *m_alive = false;
+    m_anim_timer.disconnect();
     if (m_menu_reg_id > 0 && m_connection)
         g_dbus_connection_unregister_object(m_connection, m_menu_reg_id);
     if (m_sni_reg_id > 0 && m_connection)
@@ -638,7 +640,8 @@ void TrayIcon::start_animation() {
     if (m_animating) return;
     m_animating  = true;
     m_anim_frame = 0;
-    m_anim_timer = Glib::signal_timeout().connect([this]() -> bool {
+    m_anim_timer = Glib::signal_timeout().connect([this, alive = m_alive]() -> bool {
+        if (!*alive) return false;
         m_anim_frame = (m_anim_frame + 1) % ANIM_FRAMES;
         if (m_connection) {
             GError* err = nullptr;

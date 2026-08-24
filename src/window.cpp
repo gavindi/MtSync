@@ -29,7 +29,7 @@ MtSyncWindow::MtSyncWindow(rclone::RcloneManager& manager, DaemonProxy* daemon_p
     , m_job_view(daemon_proxy)
     , m_browser_view(manager)
     , m_settings_view(m_settings)
-    , m_about_view(manager, daemon_proxy) {
+    , m_about_view(manager, daemon_proxy, m_settings) {
     set_title("Mt. Sync");
     set_default_size(1250, 900);
     set_icon_name("com.mtsync.MtSync");
