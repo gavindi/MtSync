@@ -53,19 +53,6 @@ const char* type_str(rclone::JobType t) {
     return "?";
 }
 
-// Lazily unmount an orphaned FUSE mountpoint at the kernel level. Used when a
-// mount job's rclone process has died without the RC daemon noticing (crash,
-// network loss) — RC's own mount/unmount has nothing left to talk to at that
-// point, so this bypasses it and goes straight to fusermount.
-void force_unmount(const std::string& mountpoint) {
-    std::string exe = Glib::find_program_in_path("fusermount3");
-    if (exe.empty()) exe = Glib::find_program_in_path("fusermount");
-    if (exe.empty()) return;
-    try {
-        Glib::spawn_async({}, {exe, "-u", "-z", mountpoint});
-    } catch (...) {}
-}
-
 std::string format_bytes(int64_t bytes) {
     if (bytes < 1024) return std::format("{} B", bytes);
     if (bytes < 1024 * 1024) return std::format("{:.1f} KB", bytes / 1024.0);
@@ -360,7 +347,6 @@ MtSyncDaemon::MtSyncDaemon() {
                     m_jobs[i].active = false;
                     m_jobs[i].running = false;
                     changed = true;
-                    force_unmount(m_jobs[i].destination);
                     append_log(std::format("STALE     {} [MOUNT] {} no longer mounted",
                         m_jobs[i].id, m_jobs[i].destination));
                     json rp = {{"index", i}, {"success", false}};

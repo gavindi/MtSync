@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.17 — Revert Aggressive Stale Mount Cleanup
+
+- **Reverted the 0.9.16 stale-mount force-unmount**: the health check's `fusermount3 -u -z` call on mounts missing from `list_mounts` was too aggressive and unmounted FUSE mountpoints that were still in active use. The health check now only updates job bookkeeping again, as in 0.9.15, and no longer force-unmounts at the kernel level
+
 ## 0.9.16 — Stale Mount Cleanup & Browse Error Reporting Fixes
 
 - **Orphaned FUSE mountpoints left behind when a mount job's rclone process died**: the 60-second mount-liveness health check in the daemon detected when `rclone RC`'s `list_mounts` no longer reported a previously-active mount job's destination (crash, network loss), but only updated its own job bookkeeping — the kernel-level FUSE mountpoint itself was never unmounted, leaving a broken `transport endpoint is not connected` mountpoint sitting on disk indefinitely. Since `rclone lsjson` on a directory must `lstat()` every immediate child, a single orphaned mountpoint under `$HOME` (e.g. from a dead mount job) caused every subsequent Browse tab listing of the home directory to fail with "Unable to Connect", even though nothing else was wrong. The health check now force-unmounts (`fusermount3 -u -z`, falling back to `fusermount`) any mountpoint it finds stale, going around rclone's RC `mount/unmount` (which has nothing left to talk to once RC has already lost track of the mount) straight to the kernel
