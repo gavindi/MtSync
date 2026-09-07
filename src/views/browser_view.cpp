@@ -19,6 +19,7 @@
 #include "views/browser_view.hpp"
 #include "views/compare_dialog.hpp"
 #include "views/job_edit_dialog.hpp"
+#include <glibmm/i18n.h>
 
 namespace mtsync {
 
@@ -71,40 +72,40 @@ BrowserView::BrowserView(rclone::RcloneManager& manager)
     };
 
     // Copy button
-    auto* copy_btn = make_icon_btn("edit-copy-symbolic", "Copy");
+    auto* copy_btn = make_icon_btn("edit-copy-symbolic", _("Copy"));
     copy_btn->add_css_class("action-green");
-    copy_btn->set_tooltip_text("Copy files from the source pane to the destination pane, creating a new rclone Copy job");
+    copy_btn->set_tooltip_text(_("Copy files from the source pane to the destination pane, creating a new rclone Copy job"));
     copy_btn->signal_clicked().connect([this]() {
         show_job_dialog(rclone::JobType::Copy);
     });
 
     // Move button
-    auto* move_btn = make_icon_btn("document-send-symbolic", "Move");
+    auto* move_btn = make_icon_btn("document-send-symbolic", _("Move"));
     move_btn->add_css_class("action-green");
-    move_btn->set_tooltip_text("Move files from the source pane to the destination and delete them from the source, creating a new rclone Move job");
+    move_btn->set_tooltip_text(_("Move files from the source pane to the destination and delete them from the source, creating a new rclone Move job"));
     move_btn->signal_clicked().connect([this]() {
         show_job_dialog(rclone::JobType::Move);
     });
 
     // Sync button
-    auto* sync_btn = make_icon_btn("emblem-synchronizing-symbolic", "Sync");
+    auto* sync_btn = make_icon_btn("emblem-synchronizing-symbolic", _("Sync"));
     sync_btn->add_css_class("action-green");
-    sync_btn->set_tooltip_text("Synchronise the source directory with the destination, making it an exact mirror; files deleted from the source are also removed from the destination");
+    sync_btn->set_tooltip_text(_("Synchronise the source directory with the destination, making it an exact mirror; files deleted from the source are also removed from the destination"));
     sync_btn->signal_clicked().connect([this]() {
         show_job_dialog(rclone::JobType::Sync);
     });
 
     // Mount button
-    auto* mount_btn = make_icon_btn("drive-harddisk-symbolic", "Mount");
+    auto* mount_btn = make_icon_btn("drive-harddisk-symbolic", _("Mount"));
     mount_btn->add_css_class("action-green");
-    mount_btn->set_tooltip_text("Mount the source remote as a local filesystem at the destination path using rclone mount");
+    mount_btn->set_tooltip_text(_("Mount the source remote as a local filesystem at the destination path using rclone mount"));
     mount_btn->signal_clicked().connect([this]() {
         show_job_dialog(rclone::JobType::Mount);
     });
 
     // Swap button - reverses source/destination
-    auto* swap_btn = Gtk::make_managed<Gtk::Button>("Swap ↔");
-    swap_btn->set_tooltip_text("Swap the left (source) and right (destination) panes so they exchange roles");
+    auto* swap_btn = Gtk::make_managed<Gtk::Button>(_("Swap ↔"));
+    swap_btn->set_tooltip_text(_("Swap the left (source) and right (destination) panes so they exchange roles"));
     swap_btn->signal_clicked().connect([this]() {
         swap_source_destination();
     });
@@ -125,18 +126,18 @@ BrowserView::BrowserView(rclone::RcloneManager& manager)
     auto* delete_icon = Gtk::make_managed<Gtk::Image>();
     delete_icon->set_from_icon_name("user-trash-symbolic");
     delete_icon->set_icon_size(Gtk::IconSize::NORMAL);
-    auto* delete_label = Gtk::make_managed<Gtk::Label>("Delete");
+    auto* delete_label = Gtk::make_managed<Gtk::Label>(_("Delete"));
     auto* delete_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
     delete_box->append(*delete_icon);
     delete_box->append(*delete_label);
     delete_btn->set_child(*delete_box);
     delete_btn->add_css_class("destructive-action");
-    delete_btn->set_tooltip_text("Permanently delete the selected files or folders in the active pane — this action cannot be undone");
+    delete_btn->set_tooltip_text(_("Permanently delete the selected files or folders in the active pane — this action cannot be undone"));
     delete_btn->signal_clicked().connect(sigc::mem_fun(*this, &BrowserView::on_delete_confirm));
 
     // Compare button
-    auto* compare_btn = make_icon_btn("folder-visiting-symbolic", "Compare");
-    compare_btn->set_tooltip_text("Open a side-by-side comparison of the source and destination directories, highlighting files that are unique to one side, identical, or differ in content");
+    auto* compare_btn = make_icon_btn("folder-visiting-symbolic", _("Compare"));
+    compare_btn->set_tooltip_text(_("Open a side-by-side comparison of the source and destination directories, highlighting files that are unique to one side, identical, or differ in content"));
     compare_btn->signal_clicked().connect(sigc::mem_fun(*this, &BrowserView::on_compare));
 
     // New Folder — MenuButton with a Popover containing a text entry
@@ -144,20 +145,20 @@ BrowserView::BrowserView(rclone::RcloneManager& manager)
     auto* mkdir_popover = Gtk::make_managed<Gtk::Popover>();
     auto* pop_box      = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
     auto* folder_entry = Gtk::make_managed<Gtk::Entry>();
-    auto* create_btn   = Gtk::make_managed<Gtk::Button>("Create");
+    auto* create_btn   = Gtk::make_managed<Gtk::Button>(_("Create"));
 
     auto* mkdir_icon = Gtk::make_managed<Gtk::Image>();
     mkdir_icon->set_from_icon_name("folder-new-symbolic");
     mkdir_icon->set_icon_size(Gtk::IconSize::NORMAL);
-    auto* mkdir_label = Gtk::make_managed<Gtk::Label>("New Folder");
+    auto* mkdir_label = Gtk::make_managed<Gtk::Label>(_("New Folder"));
     auto* mkdir_label_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
     mkdir_label_box->append(*mkdir_icon);
     mkdir_label_box->append(*mkdir_label);
     mkdir_btn->set_child(*mkdir_label_box);
-    mkdir_btn->set_tooltip_text("Create a new folder at the current location in the active pane");
+    mkdir_btn->set_tooltip_text(_("Create a new folder at the current location in the active pane"));
 
     pop_box->set_margin(12);
-    folder_entry->set_placeholder_text("Folder name");
+    folder_entry->set_placeholder_text(_("Folder name"));
     folder_entry->set_width_chars(22);
     create_btn->add_css_class("suggested-action");
     pop_box->append(*folder_entry);
@@ -251,10 +252,10 @@ void BrowserView::on_delete_confirm() {
     if (m_active_pane->get_selected_files().empty()) return;
 
     auto* dlg = ADW_ALERT_DIALOG(adw_alert_dialog_new(
-        "Delete Files?",
-        "The selected files will be permanently deleted."));
-    adw_alert_dialog_add_response(dlg, "cancel", "Cancel");
-    adw_alert_dialog_add_response(dlg, "delete", "Delete");
+        _("Delete Files?"),
+        _("The selected files will be permanently deleted.")));
+    adw_alert_dialog_add_response(dlg, "cancel", _("Cancel"));
+    adw_alert_dialog_add_response(dlg, "delete", _("Delete"));
     adw_alert_dialog_set_response_appearance(dlg, "delete", ADW_RESPONSE_DESTRUCTIVE);
     adw_alert_dialog_set_default_response(dlg, "cancel");
     adw_alert_dialog_set_close_response(dlg, "cancel");

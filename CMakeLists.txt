@@ -12,6 +12,51 @@ pkg_check_modules(ADWAITA REQUIRED IMPORTED_TARGET libadwaita-1)
 pkg_check_modules(SOUP REQUIRED IMPORTED_TARGET libsoup-3.0)
 pkg_check_modules(CAIRO REQUIRED IMPORTED_TARGET cairo)
 find_package(nlohmann_json 3.2 REQUIRED)
+find_package(Gettext REQUIRED)
+find_program(XGETTEXT_EXECUTABLE xgettext REQUIRED)
+
+# ── Internationalisation (GNU gettext) ─────────────────────────────────────
+# Domain "mtsync" → share/locale/<lang>/LC_MESSAGES/mtsync.mo
+include(GNUInstallDirs)
+set(GETTEXT_PACKAGE "mtsync")
+set(TRANSLATION_FILES
+    "${CMAKE_SOURCE_DIR}/po/fr.po"
+    "${CMAKE_SOURCE_DIR}/po/de.po"
+)
+
+# Extract translatable strings into po/mtsync.pot
+set(POT_FILE "${CMAKE_SOURCE_DIR}/po/mtsync.pot")
+set(XGETTEXT_KEYWORDS
+    --keyword=_
+    --keyword=N_
+    --keyword=C_:1c,2
+    --keyword=NC_:1c,2
+    --add-comments=TRANSLATORS:
+)
+file(GLOB_RECURSE TRANSLATABLE_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+add_custom_target(update-pot
+    COMMAND ${XGETTEXT_EXECUTABLE} -C --from-code=UTF-8 --language=C++
+            ${XGETTEXT_KEYWORDS}
+            --output=${POT_FILE}
+            ${TRANSLATABLE_SOURCES}
+    COMMENT "Updating po/mtsync.pot"
+    VERBATIM)
+
+# Merge new source strings into the per-language .po files (one msgmerge per file)
+add_custom_target(update-po
+    COMMAND ${CMAKE_COMMAND} -E touch ${POT_FILE}
+    DEPENDS update-pot
+    COMMENT "Merging po/mtsync.pot into translation files"
+    VERBATIM)
+foreach(_PO_FILE ${TRANSLATION_FILES})
+    add_custom_command(TARGET update-po POST_BUILD
+        COMMAND ${GETTEXT_MSGMERGE_EXECUTABLE} --update --backup=off
+                ${_PO_FILE} ${POT_FILE}
+        VERBATIM)
+endforeach()
+
+# Compile .po → .mo at build time and install under share/locale/<lang>/LC_MESSAGES
+gettext_create_translations(${POT_FILE} ALL ${TRANSLATION_FILES})
 
 # Compile GLib resources into a generated C file
 find_program(GLIB_COMPILE_RESOURCES glib-compile-resources REQUIRED)
@@ -76,6 +121,11 @@ add_executable(mtsync ${SOURCES} "${RESOURCE_C}")
 
 target_include_directories(mtsync PRIVATE
     ${CMAKE_SOURCE_DIR}/src
+)
+
+target_compile_definitions(mtsync PRIVATE
+    GETTEXT_PACKAGE="${GETTEXT_PACKAGE}"
+    LOCALEDIR="${CMAKE_INSTALL_FULL_LOCALEDIR}"
 )
 
 target_link_libraries(mtsync PRIVATE

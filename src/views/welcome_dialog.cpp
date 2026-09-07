@@ -18,12 +18,13 @@
 
 #include "views/welcome_dialog.hpp"
 #include "widgets/adw_wrapper.hpp"
+#include <glibmm/i18n.h>
 
 namespace mtsync {
 
 WelcomeDialog::WelcomeDialog(Settings& settings)
     : m_settings(settings) {
-    set_title("Welcome");
+    set_title(_("Welcome"));
     set_default_size(480, 440);
     set_modal(true);
     set_destroy_with_parent(true);
@@ -38,10 +39,10 @@ void WelcomeDialog::setup_ui() {
     // ── "welcome" page ──────────────────────────────────────────────────
     auto* welcome_status = adw::status_page();
     adw::status_page_set_icon_name(welcome_status, "help-about-symbolic");
-    adw::status_page_set_title(welcome_status, "Welcome to Mt. Sync");
+    adw::status_page_set_title(welcome_status, _("Welcome to Mt. Sync"));
     adw::status_page_set_description(welcome_status,
-        "Mount or sync network storage anywhere. Take a quick tour to learn "
-        "the basics, or jump right in.");
+        _("Mount or sync network storage anywhere. Take a quick tour to learn "
+          "the basics, or jump right in."));
 
     auto* welcome_extra = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 12);
     welcome_extra->set_halign(Gtk::Align::CENTER);
@@ -49,11 +50,11 @@ void WelcomeDialog::setup_ui() {
     auto* button_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     button_box->set_halign(Gtk::Align::CENTER);
 
-    auto* skip_btn = Gtk::make_managed<Gtk::Button>("Skip");
+    auto* skip_btn = Gtk::make_managed<Gtk::Button>(_("Skip"));
     skip_btn->add_css_class("flat");
     skip_btn->signal_clicked().connect([this]() { on_skip_clicked(); });
 
-    auto* tour_btn = Gtk::make_managed<Gtk::Button>("Take the Tour");
+    auto* tour_btn = Gtk::make_managed<Gtk::Button>(_("Take the Tour"));
     tour_btn->add_css_class("suggested-action");
     tour_btn->signal_clicked().connect([this]() { start_tour(); });
 
@@ -61,7 +62,7 @@ void WelcomeDialog::setup_ui() {
     button_box->append(*tour_btn);
     welcome_extra->append(*button_box);
 
-    m_dont_show_check = Gtk::make_managed<Gtk::CheckButton>("Don't show this again");
+    m_dont_show_check = Gtk::make_managed<Gtk::CheckButton>(_("Don't show this again"));
     m_dont_show_check->set_active(true);
     m_dont_show_check->set_halign(Gtk::Align::CENTER);
     welcome_extra->append(*m_dont_show_check);
@@ -91,14 +92,14 @@ void WelcomeDialog::setup_ui() {
     nav_box->set_margin_end(16);
     nav_box->set_margin_bottom(16);
 
-    m_back_btn = Gtk::make_managed<Gtk::Button>("Back");
+    m_back_btn = Gtk::make_managed<Gtk::Button>(_("Back"));
     m_back_btn->set_sensitive(false);
     m_back_btn->signal_clicked().connect([this]() { go_back(); });
 
     auto* nav_spacer = Gtk::make_managed<Gtk::Box>();
     nav_spacer->set_hexpand(true);
 
-    m_next_btn = Gtk::make_managed<Gtk::Button>("Next");
+    m_next_btn = Gtk::make_managed<Gtk::Button>(_("Next"));
     m_next_btn->add_css_class("suggested-action");
     m_next_btn->signal_clicked().connect([this]() { go_next(); });
 
@@ -123,25 +124,25 @@ void WelcomeDialog::build_tour_pages() {
         const char* desc;
     };
     static const Step steps[] = {
-        { "network-server-symbolic", "Add a Remote",
-          "Head to the Remotes tab and click + to connect a cloud provider "
-          "or network share." },
-        { "folder-open-symbolic", "Choose Source & Destination",
-          "In the Browse tab, pick a source in the left pane and a "
-          "destination in the right — swap them anytime with the swap "
-          "button." },
-        { "view-list-symbolic", "Pick a Job Type",
-          "Sync, Copy, Move, or Mount — choose what kind of job to run "
-          "from the Browse tab's action buttons or the job editor's Type "
-          "field." },
-        { "preferences-system-symbolic", "Set Job Options",
-          "Fine-tune the job — dry run, bi-directional sync, checksums, "
-          "cache mode — in the job editor's Job tab." },
-        { "media-playback-start-symbolic", "Run It",
-          "Hit Run Now, or save it and start it later from the Jobs tab." },
-        { "alarm-symbolic", "Advanced: Scheduling (optional)",
-          "Want it to run automatically? Enable a schedule in the job "
-          "editor's Schedule tab and set a cron-style time." },
+        { "network-server-symbolic", _("Add a Remote"),
+          _("Head to the Remotes tab and click + to connect a cloud provider "
+            "or network share.") },
+        { "folder-open-symbolic", _("Choose Source & Destination"),
+          _("In the Browse tab, pick a source in the left pane and a "
+            "destination in the right — swap them anytime with the swap "
+            "button.") },
+        { "view-list-symbolic", _("Pick a Job Type"),
+          _("Sync, Copy, Move, or Mount — choose what kind of job to run "
+            "from the Browse tab's action buttons or the job editor's Type "
+            "field.") },
+        { "preferences-system-symbolic", _("Set Job Options"),
+          _("Fine-tune the job — dry run, bi-directional sync, checksums, "
+            "cache mode — in the job editor's Job tab.") },
+        { "media-playback-start-symbolic", _("Run It"),
+          _("Hit Run Now, or save it and start it later from the Jobs tab.") },
+        { "alarm-symbolic", _("Advanced: Scheduling (optional)"),
+          _("Want it to run automatically? Enable a schedule in the job "
+            "editor's Schedule tab and set a cron-style time.") },
     };
 
     for (const auto& step : steps) {
@@ -217,7 +218,7 @@ void WelcomeDialog::on_page_changed(unsigned index) {
 void WelcomeDialog::update_nav_buttons(unsigned index) {
     m_back_btn->set_sensitive(index > 0);
     bool last = (index + 1 >= m_tour_pages.size());
-    m_next_btn->set_label(last ? "Done" : "Next");
+    m_next_btn->set_label(last ? _("Done") : _("Next"));
 }
 
 } // namespace mtsync

@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <giomm.h>
+#include <glibmm/i18n.h>
 
 namespace mtsync {
 
@@ -77,12 +78,12 @@ void BackendEditView::setup_ui() {
 
     // Basic settings group
     auto* basic_group = adw::preferences_group();
-    adw::preferences_group_set_title(basic_group, "Remote Settings");
+    adw::preferences_group_set_title(basic_group, _("Remote Settings"));
     vbox->append(*basic_group);
 
     // Name entry
     m_name_row = adw::entry_row();
-    adw::preferences_row_set_title(m_name_row, "Name");
+    adw::preferences_row_set_title(m_name_row, _("Name"));
     if (m_editing) {
         adw::entry_row_set_text(m_name_row, m_editing->name.c_str());
         gtk_widget_set_sensitive(m_name_row->gobj(), false);
@@ -91,7 +92,7 @@ void BackendEditView::setup_ui() {
 
     // Provider combo with icon factory
     m_provider_combo = adw::combo_row();
-    adw::preferences_row_set_title(m_provider_combo, "Provider");
+    adw::preferences_row_set_title(m_provider_combo, _("Provider"));
     m_provider_model = Gio::ListStore<ProviderItem>::create();
     adw::combo_row_set_model(m_provider_combo, G_LIST_MODEL(m_provider_model->gobj()));
     adw_combo_row_set_enable_search(ADW_COMBO_ROW(m_provider_combo->gobj()), true);
@@ -191,17 +192,17 @@ void BackendEditView::setup_ui() {
 
     // OAuth group (hidden by default, shown for OAuth providers)
     m_oauth_group = adw::preferences_group();
-    adw::preferences_group_set_title(m_oauth_group, "Authorization");
+    adw::preferences_group_set_title(m_oauth_group, _("Authorization"));
     m_oauth_group->set_visible(false);
 
     auto* oauth_row = adw::action_row();
-    adw::preferences_row_set_title(oauth_row, "OAuth Login");
+    adw::preferences_row_set_title(oauth_row, _("OAuth Login"));
     adw::action_row_set_subtitle(oauth_row,
-        "Click Authorize to sign in via your browser");
+        _("Click Authorize to sign in via your browser"));
 
     m_authorize_btn.add_css_class("suggested-action");
     m_authorize_btn.set_valign(Gtk::Align::CENTER);
-    m_authorize_btn.set_tooltip_text("Open a browser window to sign in and grant rclone access to this storage provider via OAuth");
+    m_authorize_btn.set_tooltip_text(_("Open a browser window to sign in and grant rclone access to this storage provider via OAuth"));
     m_authorize_btn.signal_clicked().connect(
         sigc::mem_fun(*this, &BackendEditView::on_authorize));
     adw::action_row_add_suffix(oauth_row, &m_authorize_btn);
@@ -223,13 +224,13 @@ void BackendEditView::setup_ui() {
 
     // Form group for dynamic fields (created empty, populated on provider select)
     m_form_group = adw::preferences_group();
-    adw::preferences_group_set_title(m_form_group, "Options");
+    adw::preferences_group_set_title(m_form_group, _("Options"));
     vbox->append(*m_form_group);
 
     // Advanced options expander (inside a separate group)
     auto* advanced_group = adw::preferences_group();
     m_advanced_expander = adw::expander_row();
-    adw::preferences_row_set_title(m_advanced_expander, "Advanced Options");
+    adw::preferences_row_set_title(m_advanced_expander, _("Advanced Options"));
     adw::preferences_group_add(advanced_group, m_advanced_expander);
     vbox->append(*advanced_group);
 
@@ -238,14 +239,14 @@ void BackendEditView::setup_ui() {
     btn_box->set_halign(Gtk::Align::CENTER);
     btn_box->set_margin_top(12);
 
-    auto* save_btn = Gtk::make_managed<Gtk::Button>(m_editing ? "Update" : "Save");
+    auto* save_btn = Gtk::make_managed<Gtk::Button>(m_editing ? _("Update") : _("Save"));
     save_btn->add_css_class("suggested-action");
-    save_btn->set_tooltip_text("Save the remote configuration and return to the remotes list");
+    save_btn->set_tooltip_text(_("Save the remote configuration and return to the remotes list"));
     save_btn->signal_clicked().connect(sigc::mem_fun(*this, &BackendEditView::on_save));
     btn_box->append(*save_btn);
 
-    auto* cancel_btn = Gtk::make_managed<Gtk::Button>("Cancel");
-    cancel_btn->set_tooltip_text("Discard all unsaved changes and return to the remotes list");
+    auto* cancel_btn = Gtk::make_managed<Gtk::Button>(_("Cancel"));
+    cancel_btn->set_tooltip_text(_("Discard all unsaved changes and return to the remotes list"));
     cancel_btn->signal_clicked().connect([this]() {
         if (m_on_done) m_on_done();
     });
@@ -341,7 +342,7 @@ void BackendEditView::on_provider_selected(int index) {
     m_oauth_group->set_visible(oauth);
     m_oauth_status.set_visible(false);
     m_authorize_btn.set_sensitive(true);
-    m_authorize_btn.set_label("Authorize");
+    m_authorize_btn.set_label(_("Authorize"));
     m_oauth_spinner.set_visible(false);
     m_oauth_spinner.set_spinning(false);
 
@@ -442,11 +443,11 @@ void BackendEditView::on_authorize() {
 
     // Update UI to show authorizing state
     m_authorize_btn.set_sensitive(false);
-    m_authorize_btn.set_label("Waiting...");
+    m_authorize_btn.set_label(_("Waiting..."));
     m_oauth_spinner.set_visible(true);
     m_oauth_spinner.set_spinning(true);
     m_oauth_status.set_visible(true);
-    m_oauth_status.set_text("Browser opened — complete sign-in to continue...");
+    m_oauth_status.set_text(_("Browser opened — complete sign-in to continue..."));
 
     std::string backend = provider.prefix.empty() ? provider.name : provider.prefix;
 
@@ -459,13 +460,13 @@ void BackendEditView::on_authorize() {
 
             if (result.has_value()) {
                 m_oauth_token = std::move(result.value());
-                m_authorize_btn.set_label("Authorized");
+                m_authorize_btn.set_label(_("Authorized"));
                 m_authorize_btn.remove_css_class("suggested-action");
                 m_authorize_btn.add_css_class("success");
-                m_oauth_status.set_text("Authorization successful.");
+                m_oauth_status.set_text(_("Authorization successful."));
             } else {
-                m_authorize_btn.set_label("Retry");
-                m_oauth_status.set_text("Authorization failed: " + result.error());
+                m_authorize_btn.set_label(_("Retry"));
+                m_oauth_status.set_text(std::string(_("Authorization failed: ")) + result.error());
             }
         });
 }

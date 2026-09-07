@@ -19,6 +19,7 @@
 #include "views/about_view.hpp"
 #include "views/welcome_dialog.hpp"
 #include "widgets/adw_wrapper.hpp"
+#include <glibmm/i18n.h>
 #include <adwaita.h>
 #include <cstring>
 
@@ -139,12 +140,12 @@ void AboutView::setup_ui() {
     title_label->set_halign(Gtk::Align::CENTER);
     header->append(*title_label);
 
-    auto* desc_label = Gtk::make_managed<Gtk::Label>("Mount or sync network storage anywhere");
+    auto* desc_label = Gtk::make_managed<Gtk::Label>(_("Mount or sync network storage anywhere"));
     desc_label->add_css_class("dim-label");
     desc_label->set_halign(Gtk::Align::CENTER);
     header->append(*desc_label);
 
-    auto* tour_btn = Gtk::make_managed<Gtk::Button>("Quick Start Tour");
+    auto* tour_btn = Gtk::make_managed<Gtk::Button>(_("Quick Start Tour"));
     tour_btn->add_css_class("pill");
     tour_btn->set_halign(Gtk::Align::CENTER);
     tour_btn->set_margin_top(6);
@@ -163,17 +164,17 @@ void AboutView::setup_ui() {
     vbox->append(*info_group);
 
     auto* version_row = adw::action_row();
-    adw::preferences_row_set_title(version_row, "Version");
+    adw::preferences_row_set_title(version_row, _("Version"));
     adw::action_row_set_subtitle(version_row, "0.9.17");
     adw::preferences_group_add(info_group, version_row);
 
     auto* license_row = adw::action_row();
-    adw::preferences_row_set_title(license_row, "License");
+    adw::preferences_row_set_title(license_row, _("License"));
     adw::action_row_set_subtitle(license_row, "GNU General Public License v2.0");
     adw::preferences_group_add(info_group, license_row);
 
     auto* copyright_row = adw::action_row();
-    adw::preferences_row_set_title(copyright_row, "Copyright");
+    adw::preferences_row_set_title(copyright_row, _("Copyright"));
     adw::action_row_set_subtitle(copyright_row, "© 2026 Gavin Graham");
     adw::preferences_group_add(info_group, copyright_row);
 
@@ -191,7 +192,7 @@ void AboutView::setup_ui() {
     info_box->set_margin_start(12);
     info_box->set_margin_end(12);
 
-    m_rclone_version_label = Gtk::make_managed<Gtk::Label>("Loading...");
+    m_rclone_version_label = Gtk::make_managed<Gtk::Label>(_("Loading..."));
     m_rclone_version_label->add_css_class("dim-label");
 
     auto* sep1 = Gtk::make_managed<Gtk::Label>("·");
@@ -239,12 +240,12 @@ void AboutView::setup_ui() {
         start_logo_animation();
 
         bool connected = m_daemon_proxy && m_daemon_proxy->is_connected();
-        m_status_label->set_text(connected ? "Connected" : "Disconnected");
+        m_status_label->set_text(connected ? _("Connected") : _("Disconnected"));
 
-        if (m_rclone_version_label->get_text() == "Loading...") {
+        if (m_rclone_version_label->get_text() == _("Loading...")) {
             m_manager.cli().get_version([this](auto result) {
                 m_rclone_version_label->set_text(
-                    result.has_value() ? result.value() : "unavailable");
+                    result.has_value() ? result.value() : _("unavailable"));
             });
         }
     });

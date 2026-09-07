@@ -19,6 +19,7 @@
 #include "views/backends_view.hpp"
 #include "views/backend_edit_view.hpp"
 #include "widgets/adw_wrapper.hpp"
+#include <glibmm/i18n.h>
 #include <sstream>
 #include <iomanip>
 #include <unordered_map>
@@ -95,19 +96,19 @@ static std::string format_bytes(int64_t bytes) {
 static std::string format_capacity(const rclone::AboutInfo& about) {
     // Show "X used of Y" or "X free" or similar, depending on what's available
     if (about.used && about.total) {
-        return format_bytes(*about.used) + " of " + format_bytes(*about.total);
+        return format_bytes(*about.used) + " " + _("of") + " " + format_bytes(*about.total);
     }
     if (about.free && about.total) {
-        return format_bytes(*about.free) + " free of " + format_bytes(*about.total);
+        return format_bytes(*about.free) + " " + _("free of") + " " + format_bytes(*about.total);
     }
     if (about.used) {
-        return format_bytes(*about.used) + " used";
+        return format_bytes(*about.used) + " " + _("used");
     }
     if (about.free) {
-        return format_bytes(*about.free) + " free";
+        return format_bytes(*about.free) + " " + _("free");
     }
     if (about.total) {
-        return format_bytes(*about.total) + " total";
+        return format_bytes(*about.total) + " " + _("total");
     }
     return "";
 }
@@ -165,22 +166,22 @@ BackendsView::BackendsView(rclone::RcloneManager& manager)
     m_scroll.set_child(*clamp);
 
     m_prefs_group = adw::preferences_group();
-    adw::preferences_group_set_title(m_prefs_group, "Configured Remotes");
+    adw::preferences_group_set_title(m_prefs_group, _("Configured Remotes"));
 
     // Add button in the header suffix
     auto* add_btn = Gtk::make_managed<Gtk::Button>();
     add_btn->set_icon_name("list-add-symbolic");
     add_btn->add_css_class("flat");
-    add_btn->set_tooltip_text("Add a new remote storage location such as Google Drive, S3, or SFTP");
+    add_btn->set_tooltip_text(_("Add a new remote storage location such as Google Drive, S3, or SFTP"));
     add_btn->signal_clicked().connect(sigc::mem_fun(*this, &BackendsView::show_add_remote));
     adw::preferences_group_set_header_suffix(m_prefs_group, add_btn);
 
     // Empty state
     m_empty_status = adw::status_page();
     adw::status_page_set_icon_name(m_empty_status, "preferences-system-symbolic");
-    adw::status_page_set_title(m_empty_status, "No Remotes Configured");
+    adw::status_page_set_title(m_empty_status, _("No Remotes Configured"));
     adw::status_page_set_description(m_empty_status,
-        "Click the + button above to add your first remote.");
+        _("Click the + button above to add your first remote."));
     m_empty_status->set_visible(false);
 
     auto* content_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
@@ -189,7 +190,7 @@ BackendsView::BackendsView(rclone::RcloneManager& manager)
     adw_clamp_set_child(ADW_CLAMP(clamp->gobj()), GTK_WIDGET(content_box->gobj()));
 
     // Wrap the scroll in a navigation page
-    m_list_page = adw::navigation_page_new(&m_scroll, "Backends");
+    m_list_page = adw::navigation_page_new(&m_scroll, _("Backends"));
     adw::navigation_view_push_page(m_nav_view, m_list_page);
 
     append(*m_nav_view);
@@ -265,7 +266,7 @@ void BackendsView::populate(const std::vector<rclone::RemoteInfo>& remotes) {
         rr.edit_btn->set_icon_name("document-edit-symbolic");
         rr.edit_btn->set_valign(Gtk::Align::CENTER);
         rr.edit_btn->add_css_class("flat");
-        rr.edit_btn->set_tooltip_text("Edit the connection settings for this remote storage location");
+        rr.edit_btn->set_tooltip_text(_("Edit the connection settings for this remote storage location"));
 
         auto remote_copy = remote;
         rr.edit_btn->signal_clicked().connect([this, remote_copy]() {
@@ -278,7 +279,7 @@ void BackendsView::populate(const std::vector<rclone::RemoteInfo>& remotes) {
         rr.del_btn->set_valign(Gtk::Align::CENTER);
         rr.del_btn->add_css_class("flat");
         rr.del_btn->add_css_class("destructive-action");
-        rr.del_btn->set_tooltip_text("Permanently remove this remote storage location from rclone's configuration");
+        rr.del_btn->set_tooltip_text(_("Permanently remove this remote storage location from rclone's configuration"));
 
         std::string name = remote.name;
         rr.del_btn->signal_clicked().connect([this, name]() {
@@ -330,7 +331,7 @@ void BackendsView::show_add_remote() {
     m_edit_view = std::make_unique<BackendEditView>(m_manager,
         [this]() { on_edit_done(); });
 
-    auto* page = adw::navigation_page_new(m_edit_view.get(), "New Remote");
+    auto* page = adw::navigation_page_new(m_edit_view.get(), _("New Remote"));
     adw::navigation_view_push_page(m_nav_view, page);
 }
 
@@ -338,7 +339,7 @@ void BackendsView::show_edit_remote(const rclone::RemoteInfo& remote) {
     m_edit_view = std::make_unique<BackendEditView>(m_manager, remote,
         [this]() { on_edit_done(); });
 
-    auto* page = adw::navigation_page_new(m_edit_view.get(), "Edit Remote");
+    auto* page = adw::navigation_page_new(m_edit_view.get(), _("Edit Remote"));
     adw::navigation_view_push_page(m_nav_view, page);
 }
 

@@ -20,6 +20,7 @@
 #include "sandbox.hpp"
 #include <adwaita.h>
 #include <format>
+#include <glibmm/i18n.h>
 #include <glibmm/markup.h>
 #include <unordered_map>
 
@@ -111,8 +112,8 @@ BrowserPane::BrowserPane(rclone::RcloneManager& manager)
 
     m_no_remote_status = adw::status_page();
     adw::status_page_set_icon_name(m_no_remote_status, "network-server-symbolic");
-    adw::status_page_set_title(m_no_remote_status, "No Remote Selected");
-    adw::status_page_set_description(m_no_remote_status, "Choose a remote from the dropdown above.");
+    adw::status_page_set_title(m_no_remote_status, _("No Remote Selected"));
+    adw::status_page_set_description(m_no_remote_status, _("Choose a remote from the dropdown above."));
     m_content_stack->add(*m_no_remote_status, "no-remote");
 
     auto* loading_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
@@ -126,14 +127,14 @@ BrowserPane::BrowserPane(rclone::RcloneManager& manager)
 
     m_empty_status = adw::status_page();
     adw::status_page_set_icon_name(m_empty_status, "folder-open-symbolic");
-    adw::status_page_set_title(m_empty_status, "Empty Folder");
-    adw::status_page_set_description(m_empty_status, "This directory contains no files.");
+    adw::status_page_set_title(m_empty_status, _("Empty Folder"));
+    adw::status_page_set_description(m_empty_status, _("This directory contains no files."));
     m_content_stack->add(*m_empty_status, "empty");
 
     m_error_status = adw::status_page();
     adw::status_page_set_icon_name(m_error_status, "network-error-symbolic");
-    adw::status_page_set_title(m_error_status, "Unable to Connect");
-    adw::status_page_set_description(m_error_status, "The remote did not respond. Check the connection and try again.");
+    adw::status_page_set_title(m_error_status, _("Unable to Connect"));
+    adw::status_page_set_description(m_error_status, _("The remote did not respond. Check the connection and try again."));
     m_content_stack->add(*m_error_status, "error");
 
     build_column_view();
@@ -158,7 +159,7 @@ BrowserPane::BrowserPane(rclone::RcloneManager& manager)
     auto* spacer = Gtk::make_managed<Gtk::Box>();
     spacer->set_hexpand(true);
     footer->append(*spacer);
-    m_show_hidden_check = Gtk::make_managed<Gtk::CheckButton>("Show hidden files");
+    m_show_hidden_check = Gtk::make_managed<Gtk::CheckButton>(_("Show hidden files"));
     m_show_hidden_check->set_active(false);
     m_show_hidden_check->signal_toggled().connect([this]() {
         m_show_hidden = m_show_hidden_check->get_active();
@@ -228,7 +229,7 @@ void BrowserPane::setup_header() {
         auto pos = item->get_position();
         std::string name, type;
         if (pos == 0) {
-            name = "Local"; type = "local";
+            name = _("Local"); type = "local";
         } else if (pos - 1 < m_remotes.size()) {
             name = m_remotes[pos - 1].name;
             type = m_remotes[pos - 1].type;
@@ -241,14 +242,14 @@ void BrowserPane::setup_header() {
 
 
     m_back_btn.set_icon_name("go-previous-symbolic");
-    m_back_btn.set_tooltip_text("Navigate back to the previous directory in history");
+    m_back_btn.set_tooltip_text(_("Navigate back to the previous directory in history"));
     m_back_btn.add_css_class("flat");
     m_back_btn.add_css_class("circular");
     m_back_btn.signal_clicked().connect([this]() { go_back(); });
     nav_bar->append(m_back_btn);
 
     m_up_btn.set_icon_name("go-up-symbolic");
-    m_up_btn.set_tooltip_text("Navigate up to the parent directory");
+    m_up_btn.set_tooltip_text(_("Navigate up to the parent directory"));
     m_up_btn.add_css_class("flat");
     m_up_btn.add_css_class("circular");
     m_up_btn.signal_clicked().connect([this]() { go_up(); });
@@ -264,7 +265,7 @@ void BrowserPane::setup_header() {
     nav_bar->append(*m_breadcrumb_scroll);
 
     m_refresh_btn.set_icon_name("view-refresh-symbolic");
-    m_refresh_btn.set_tooltip_text("Reload the current directory listing from the remote");
+    m_refresh_btn.set_tooltip_text(_("Reload the current directory listing from the remote"));
     m_refresh_btn.add_css_class("flat");
     m_refresh_btn.signal_clicked().connect([this]() {
         signal_focused.emit();
@@ -324,7 +325,7 @@ void BrowserPane::build_column_view() {
         }
         if (label) label->set_text(obj->property_name.get_value());
     });
-    auto name_col = Gtk::ColumnViewColumn::create("Name", name_factory);
+    auto name_col = Gtk::ColumnViewColumn::create(_("Name"), name_factory);
     name_col->set_expand(true);
     name_col->set_sorter(adw::make_sorter([](GObject* a, GObject* b) -> int {
         auto na = get_str_prop(a, "name").lowercase();
@@ -348,7 +349,7 @@ void BrowserPane::build_column_view() {
         label->set_text(obj->property_is_dir.get_value()
             ? "--" : format_size(obj->property_size.get_value()));
     });
-    auto size_col = Gtk::ColumnViewColumn::create("Size", size_factory);
+    auto size_col = Gtk::ColumnViewColumn::create(_("Size"), size_factory);
     size_col->set_fixed_width(100);
     size_col->set_sorter(adw::make_sorter([](GObject* a, GObject* b) -> int {
         auto sa = get_int64_prop(a, "size");
@@ -373,7 +374,7 @@ void BrowserPane::build_column_view() {
         if (mod.size() >= 10) mod = mod.substr(0, 10);
         label->set_text(mod);
     });
-    auto mod_col = Gtk::ColumnViewColumn::create("Modified", mod_factory);
+    auto mod_col = Gtk::ColumnViewColumn::create(_("Modified"), mod_factory);
     mod_col->set_fixed_width(120);
     mod_col->set_sorter(adw::make_sorter([](GObject* a, GObject* b) -> int {
         return get_str_prop(a, "mod-time").compare(get_str_prop(b, "mod-time"));
@@ -466,10 +467,10 @@ void BrowserPane::navigate(const std::string& path) {
             if (m_status_label) m_status_label->set_text("");
             if (m_is_local) {
                 adw::status_page_set_icon_name(m_error_status, "dialog-error-symbolic");
-                adw::status_page_set_title(m_error_status, "Unable to Read Directory");
+                adw::status_page_set_title(m_error_status, _("Unable to Read Directory"));
             } else {
                 adw::status_page_set_icon_name(m_error_status, "network-error-symbolic");
-                adw::status_page_set_title(m_error_status, "Unable to Connect");
+                adw::status_page_set_title(m_error_status, _("Unable to Connect"));
             }
             adw::status_page_set_description(m_error_status,
                 Glib::Markup::escape_text(result.error()).c_str());
@@ -488,11 +489,12 @@ void BrowserPane::navigate(const std::string& path) {
         }
         if (m_status_label) {
             auto size_str = format_size(total_size);
+            auto files_str   = std::vformat(ngettext("{} file", "{} files", file_count),
+                std::make_format_args(file_count));
+            auto folders_str = std::vformat(ngettext("{} folder", "{} folders", folder_count),
+                std::make_format_args(folder_count));
             m_status_label->set_text(std::format(
-                "{} file{}, {} folder{}, Total: {}",
-                file_count,   file_count   == 1 ? "" : "s",
-                folder_count, folder_count == 1 ? "" : "s",
-                size_str));
+                "{}, {}, {}: {}", files_str, folders_str, _("Total"), size_str));
         }
         show_content_state(result.value().empty() ? "empty" : "files");
     });
@@ -502,8 +504,8 @@ void BrowserPane::rebuild_breadcrumbs() {
     while (auto* child = m_breadcrumb_box->get_first_child())
         m_breadcrumb_box->remove(*child);
 
-    Glib::ustring root_label = m_is_local ? "Local"
-        : (m_current_remote.empty() ? Glib::ustring("Remote") : Glib::ustring(m_current_remote));
+    Glib::ustring root_label = m_is_local ? _("Local")
+        : (m_current_remote.empty() ? Glib::ustring(_("Remote")) : Glib::ustring(m_current_remote));
     std::string root_path = m_is_local ? "/" : "";
 
     auto* root_btn = Gtk::make_managed<Gtk::Button>(root_label);

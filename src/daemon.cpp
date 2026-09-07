@@ -20,6 +20,7 @@
 #include "rclone/cron_utils.hpp"
 #include "ipc/protocol.hpp"
 #include "settings.hpp"
+#include <glibmm/i18n.h>
 #include <format>
 #include <iostream>
 #include <unordered_set>
@@ -133,7 +134,7 @@ MtSyncDaemon::MtSyncDaemon() {
     load_jobs();
 
     m_tray = std::make_unique<TrayIcon>();
-    m_tray->set_tooltip("Mt. Sync - rclone GUI");
+    m_tray->set_tooltip(_("Mt. Sync - rclone GUI"));
     m_tray->signal_show_window().connect([this]() {
         if (m_ipc_server->client_count() > 0) {
             m_ipc_server->send_to_all(make_response(ipc::ResponseType::ShowWindow, {}));
@@ -536,7 +537,7 @@ void MtSyncDaemon::on_run_job(size_t index) {
 
     auto settings = load_settings();
     if (settings.notify_on_start)
-        send_notification("Job Started", job.source + " → " + job.destination);
+        send_notification(_("Job Started"), job.source + " → " + job.destination);
 
     m_tray->set_attention(false);
 
@@ -922,10 +923,10 @@ void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::strin
 
         if (success) {
             if (settings.notify_on_completion)
-                send_notification("Sync Complete", job.source + " → " + job.destination);
+                send_notification(_("Sync Complete"), job.source + " → " + job.destination);
         } else {
             if (settings.notify_on_errors)
-                send_notification("Sync Failed", job.source + " → " + job.destination);
+                send_notification(_("Sync Failed"), job.source + " → " + job.destination);
         }
 
         if (job.schedule_enabled) {

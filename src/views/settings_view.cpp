@@ -23,6 +23,7 @@
 #include <filesystem>
 #include <fstream>
 #include <format>
+#include <glibmm/i18n.h>
 
 namespace mtsync {
 
@@ -93,75 +94,75 @@ void SettingsView::setup_ui() {
 
     // ── Notifications ─────────────────────────────────────────────────────────
     auto* notif_group = adw::preferences_group();
-    adw::preferences_group_set_title(notif_group, "Notifications");
+    adw::preferences_group_set_title(notif_group, _("Notifications"));
     vbox->append(*notif_group);
 
     m_notify_start_row = adw::switch_row();
-    adw::preferences_row_set_title(m_notify_start_row, "On Job Start");
-    m_notify_start_row->set_tooltip_text("Show a desktop notification whenever a sync, copy, move, or mount job begins running");
+    adw::preferences_row_set_title(m_notify_start_row, _("On Job Start"));
+    m_notify_start_row->set_tooltip_text(_("Show a desktop notification whenever a sync, copy, move, or mount job begins running"));
     adw::switch_row_set_active(m_notify_start_row, m_settings.notify_on_start);
     adw::preferences_group_add(notif_group, m_notify_start_row);
 
     m_notify_completion_row = adw::switch_row();
-    adw::preferences_row_set_title(m_notify_completion_row, "On Completion");
-    m_notify_completion_row->set_tooltip_text("Show a desktop notification when a job finishes successfully");
+    adw::preferences_row_set_title(m_notify_completion_row, _("On Completion"));
+    m_notify_completion_row->set_tooltip_text(_("Show a desktop notification when a job finishes successfully"));
     adw::switch_row_set_active(m_notify_completion_row, m_settings.notify_on_completion);
     adw::preferences_group_add(notif_group, m_notify_completion_row);
 
     m_notify_errors_row = adw::switch_row();
-    adw::preferences_row_set_title(m_notify_errors_row, "On Completion with Errors/Warnings");
-    m_notify_errors_row->set_tooltip_text("Show a desktop notification when a job finishes but encountered errors or warnings during the transfer");
+    adw::preferences_row_set_title(m_notify_errors_row, _("On Completion with Errors/Warnings"));
+    m_notify_errors_row->set_tooltip_text(_("Show a desktop notification when a job finishes but encountered errors or warnings during the transfer"));
     adw::switch_row_set_active(m_notify_errors_row, m_settings.notify_on_errors);
     adw::preferences_group_add(notif_group, m_notify_errors_row);
 
     // ── Start Up & Shut Down ──────────────────────────────────────────────────
     auto* general_group = adw::preferences_group();
-    adw::preferences_group_set_title(general_group, "Start Up &amp; Shut Down");
+    adw::preferences_group_set_title(general_group, _("Start Up & Shut Down"));
     vbox->append(*general_group);
 
     m_autostart_row = adw::switch_row();
-    adw::preferences_row_set_title(m_autostart_row, "Start daemon on login");
-    m_autostart_row->set_tooltip_text("Automatically start the Mt. Sync background daemon when you log in, so scheduled jobs run even when the app window is closed");
+    adw::preferences_row_set_title(m_autostart_row, _("Start daemon on login"));
+    m_autostart_row->set_tooltip_text(_("Automatically start the Mt. Sync background daemon when you log in, so scheduled jobs run even when the app window is closed"));
     adw::switch_row_set_active(m_autostart_row, m_settings.start_daemon_on_login);
     adw::preferences_group_add(general_group, m_autostart_row);
 
     m_minimized_row = adw::switch_row();
-    adw::preferences_row_set_title(m_minimized_row, "Start minimized to tray");
-    m_minimized_row->set_tooltip_text("Launch Mt. Sync with the window hidden; the app appears only as a system tray icon until you open it");
+    adw::preferences_row_set_title(m_minimized_row, _("Start minimized to tray"));
+    m_minimized_row->set_tooltip_text(_("Launch Mt. Sync with the window hidden; the app appears only as a system tray icon until you open it"));
     adw::switch_row_set_active(m_minimized_row, m_settings.start_minimized);
     adw::preferences_group_add(general_group, m_minimized_row);
 
     m_tray_row = adw::switch_row();
-    adw::preferences_row_set_title(m_tray_row, "Shutdown daemon when closing application");
-    m_tray_row->set_tooltip_text("Stop the background daemon and all running jobs when the app window is closed; when off, the daemon keeps running and scheduled jobs continue in the background");
+    adw::preferences_row_set_title(m_tray_row, _("Shutdown daemon when closing application"));
+    m_tray_row->set_tooltip_text(_("Stop the background daemon and all running jobs when the app window is closed; when off, the daemon keeps running and scheduled jobs continue in the background"));
     adw::switch_row_set_active(m_tray_row, m_settings.shutdown_daemon_on_close);
     adw::preferences_group_add(general_group, m_tray_row);
 
     // ── Transfers ─────────────────────────────────────────────────────────────
     auto* transfers_group = adw::preferences_group();
-    adw::preferences_group_set_title(transfers_group, "Transfers");
+    adw::preferences_group_set_title(transfers_group, _("Transfers"));
     vbox->append(*transfers_group);
 
     m_bandwidth_row = adw::entry_row();
-    adw::preferences_row_set_title(m_bandwidth_row, "Default bandwidth limit (e.g. 10M)");
+    adw::preferences_row_set_title(m_bandwidth_row, _("Default bandwidth limit (e.g. 10M)"));
     if (!m_settings.default_bandwidth.empty())
         adw::entry_row_set_text(m_bandwidth_row, m_settings.default_bandwidth.c_str());
     adw::preferences_group_add(transfers_group, m_bandwidth_row);
 
     m_checksums_row = adw::switch_row();
-    adw::preferences_row_set_title(m_checksums_row, "Verify checksums");
-    m_checksums_row->set_tooltip_text("Verify file integrity using checksums during transfers — slower but guarantees bit-perfect copies");
+    adw::preferences_row_set_title(m_checksums_row, _("Verify checksums"));
+    m_checksums_row->set_tooltip_text(_("Verify file integrity using checksums during transfers — slower but guarantees bit-perfect copies"));
     adw::switch_row_set_active(m_checksums_row, m_settings.verify_checksums);
     adw::preferences_group_add(transfers_group, m_checksums_row);
 
     m_transfers_row = adw::entry_row();
-    adw::preferences_row_set_title(m_transfers_row, "Parallel transfers");
+    adw::preferences_row_set_title(m_transfers_row, _("Parallel transfers"));
     adw::entry_row_set_text(m_transfers_row,
         std::format("{}", m_settings.parallel_transfers).c_str());
     adw::preferences_group_add(transfers_group, m_transfers_row);
 
     m_retries_row = adw::entry_row();
-    adw::preferences_row_set_title(m_retries_row, "Retries on failure");
+    adw::preferences_row_set_title(m_retries_row, _("Retries on failure"));
     adw::entry_row_set_text(m_retries_row,
         std::format("{}", m_settings.retries).c_str());
     adw::preferences_group_add(transfers_group, m_retries_row);
@@ -172,13 +173,13 @@ void SettingsView::setup_ui() {
     vbox->append(*rclone_group);
 
     m_rclone_path_row = adw::entry_row();
-    adw::preferences_row_set_title(m_rclone_path_row, "rclone binary path");
+    adw::preferences_row_set_title(m_rclone_path_row, _("rclone binary path"));
     if (!m_settings.rclone_path.empty())
         adw::entry_row_set_text(m_rclone_path_row, m_settings.rclone_path.c_str());
     adw::preferences_group_add(rclone_group, m_rclone_path_row);
 
     auto* rclone_hint = Gtk::make_managed<Gtk::Label>(
-        "Leave empty to use PATH lookup. Restart required.");
+        _("Leave empty to use PATH lookup. Restart required."));
     rclone_hint->add_css_class("dim-label");
     rclone_hint->set_xalign(0.0f);
     rclone_hint->set_margin_start(12);
@@ -186,13 +187,13 @@ void SettingsView::setup_ui() {
     vbox->append(*rclone_hint);
 
     m_global_flags_row = adw::entry_row();
-    adw::preferences_row_set_title(m_global_flags_row, "Global rclone flags");
+    adw::preferences_row_set_title(m_global_flags_row, _("Global rclone flags"));
     if (!m_settings.global_rclone_flags.empty())
         adw::entry_row_set_text(m_global_flags_row, m_settings.global_rclone_flags.c_str());
     adw::preferences_group_add(rclone_group, m_global_flags_row);
 
     auto* flags_hint = Gtk::make_managed<Gtk::Label>(
-        "Added to every job at execution time (e.g. --log-level DEBUG --checkers 8).");
+        _("Added to every job at execution time (e.g. --log-level DEBUG --checkers 8)."));
     flags_hint->add_css_class("dim-label");
     flags_hint->set_xalign(0.0f);
     flags_hint->set_margin_start(12);

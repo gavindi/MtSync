@@ -20,6 +20,7 @@
 #include "views/job_edit_dialog.hpp"
 #include "rclone/cron_utils.hpp"
 #include "widgets/adw_wrapper.hpp"
+#include <glibmm/i18n.h>
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
@@ -53,6 +54,15 @@ std::string last_path_component(const std::string& rclone_path) {
 
 std::string job_display_name(const rclone::Job& job) {
     return last_path_component(job.source) + " → " + last_path_component(job.destination);
+}
+
+// Translate a job's stored (English) last_status code at display time.
+const char* translate_status(const std::string& status) {
+    if (status == "success") return _("success");
+    if (status == "error")   return _("error");
+    if (status == "stopped") return _("stopped");
+    if (status == "running") return _("running");
+    return status.c_str();
 }
 
 const char* type_icon(rclone::JobType t) {
@@ -91,24 +101,24 @@ JobView::JobView(DaemonProxy* daemon_proxy)
     auto* groups_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 12);
 
     auto* header_group = adw::preferences_group();
-    adw::preferences_group_set_title(header_group, "Jobs");
+    adw::preferences_group_set_title(header_group, _("Jobs"));
     auto* add_btn = Gtk::make_managed<Gtk::Button>();
     add_btn->set_icon_name("list-add-symbolic");
     add_btn->add_css_class("flat");
     add_btn->add_css_class("circular");
-    add_btn->set_tooltip_text("Add a new sync, copy, move, or mount job");
+    add_btn->set_tooltip_text(_("Add a new sync, copy, move, or mount job"));
     add_btn->signal_clicked().connect(sigc::mem_fun(*this, &JobView::show_add_dialog));
     adw::preferences_group_set_header_suffix(header_group, add_btn);
     groups_box->append(*header_group);
 
     m_group_sync  = adw::preferences_group();
-    adw::preferences_group_set_title(m_group_sync,  "Sync");
+    adw::preferences_group_set_title(m_group_sync,  _("Sync"));
     m_group_copy  = adw::preferences_group();
-    adw::preferences_group_set_title(m_group_copy,  "Copy");
+    adw::preferences_group_set_title(m_group_copy,  _("Copy"));
     m_group_move  = adw::preferences_group();
-    adw::preferences_group_set_title(m_group_move,  "Move");
+    adw::preferences_group_set_title(m_group_move,  _("Move"));
     m_group_mount = adw::preferences_group();
-    adw::preferences_group_set_title(m_group_mount, "Mount");
+    adw::preferences_group_set_title(m_group_mount, _("Mount"));
     groups_box->append(*m_group_sync);
     groups_box->append(*m_group_copy);
     groups_box->append(*m_group_move);
@@ -126,7 +136,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
     // Log section
     auto* log_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
 
-    auto* log_header = Gtk::make_managed<Gtk::Label>("Activity Log");
+    auto* log_header = Gtk::make_managed<Gtk::Label>(_("Activity Log"));
     log_header->set_halign(Gtk::Align::START);
     log_header->add_css_class("caption");
     log_header->add_css_class("dim-label");
@@ -155,7 +165,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
         if (!obj) return;
         dynamic_cast<Gtk::Label*>(item->get_child())->set_text(obj->property_time.get_value());
     });
-    auto time_col = Gtk::ColumnViewColumn::create("Time", time_factory);
+    auto time_col = Gtk::ColumnViewColumn::create(_("Time"), time_factory);
     time_col->set_fixed_width(175);
     m_log_column_view->append_column(time_col);
 
@@ -181,7 +191,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
         else if (state == "RETRYING")  lbl->add_css_class("log-retrying");
         else if (state == "STOPPED")   lbl->add_css_class("log-stopped");
     });
-    auto state_col = Gtk::ColumnViewColumn::create("State", state_factory);
+    auto state_col = Gtk::ColumnViewColumn::create(_("State"), state_factory);
     state_col->set_fixed_width(110);
     m_log_column_view->append_column(state_col);
 
@@ -199,7 +209,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
         if (!obj) return;
         dynamic_cast<Gtk::Label*>(item->get_child())->set_text(obj->property_job_id.get_value());
     });
-    auto id_col = Gtk::ColumnViewColumn::create("Job ID", id_factory);
+    auto id_col = Gtk::ColumnViewColumn::create(_("Job ID"), id_factory);
     id_col->set_fixed_width(290);
     m_log_column_view->append_column(id_col);
 
@@ -215,7 +225,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
         if (!obj) return;
         dynamic_cast<Gtk::Label*>(item->get_child())->set_text(obj->property_job_type.get_value());
     });
-    auto type_col = Gtk::ColumnViewColumn::create("Type", type_factory);
+    auto type_col = Gtk::ColumnViewColumn::create(_("Type"), type_factory);
     type_col->set_fixed_width(75);
     m_log_column_view->append_column(type_col);
 
@@ -236,7 +246,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
         btn->add_css_class("flat");
         btn->set_visible(false);
         btn->set_valign(Gtk::Align::CENTER);
-        btn->set_tooltip_text("Open the activity log file for this job in the default application");
+        btn->set_tooltip_text(_("Open the activity log file for this job in the default application"));
         // Single permanent handler; path stored as GObject data to survive cell recycling
         btn->signal_clicked().connect([btn]() {
             const char* p = static_cast<const char*>(
@@ -259,7 +269,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
             g_strdup(log_path.c_str()), g_free);
         btn->set_visible(!log_path.empty());
     });
-    auto contents_col = Gtk::ColumnViewColumn::create("Activity", contents_factory);
+    auto contents_col = Gtk::ColumnViewColumn::create(_("Activity"), contents_factory);
     contents_col->set_expand(true);
     m_log_column_view->append_column(contents_col);
 
@@ -443,7 +453,7 @@ void JobView::append_job_row(size_t index) {
     ui.run_btn->set_valign(Gtk::Align::CENTER);
     ui.run_btn->add_css_class("flat");
     ui.run_btn->add_css_class("success");
-    ui.run_btn->set_tooltip_text("Run this job immediately");
+    ui.run_btn->set_tooltip_text(_("Run this job immediately"));
     ui.run_btn->signal_clicked().connect([this, i]() { on_run_job(i); });
 
     ui.stop_btn = std::make_unique<Gtk::Button>();
@@ -452,14 +462,14 @@ void JobView::append_job_row(size_t index) {
     ui.stop_btn->add_css_class("flat");
     ui.stop_btn->add_css_class("destructive-action");
     ui.stop_btn->set_visible(false);
-    ui.stop_btn->set_tooltip_text("Stop this job while it is running");
+    ui.stop_btn->set_tooltip_text(_("Stop this job while it is running"));
     ui.stop_btn->signal_clicked().connect([this, i]() { on_stop_job(i); });
 
     ui.edit_btn = std::make_unique<Gtk::Button>();
     ui.edit_btn->set_icon_name("document-edit-symbolic");
     ui.edit_btn->set_valign(Gtk::Align::CENTER);
     ui.edit_btn->add_css_class("flat");
-    ui.edit_btn->set_tooltip_text("Edit this job's configuration, schedule, and advanced settings");
+    ui.edit_btn->set_tooltip_text(_("Edit this job's configuration, schedule, and advanced settings"));
     ui.edit_btn->signal_clicked().connect([this, i]() { show_edit_dialog(i); });
 
     ui.del_btn = std::make_unique<Gtk::Button>();
@@ -467,7 +477,7 @@ void JobView::append_job_row(size_t index) {
     ui.del_btn->set_valign(Gtk::Align::CENTER);
     ui.del_btn->add_css_class("flat");
     ui.del_btn->add_css_class("destructive-action");
-    ui.del_btn->set_tooltip_text("Permanently delete this job from the list");
+    ui.del_btn->set_tooltip_text(_("Permanently delete this job from the list"));
     ui.del_btn->signal_clicked().connect([this, i]() { on_delete_job(i); });
 
     // Disclosure toggle button (chevron), placed after delete button
@@ -475,7 +485,7 @@ void JobView::append_job_row(size_t index) {
     expand_btn->set_icon_name("pan-end-symbolic");
     expand_btn->set_valign(Gtk::Align::CENTER);
     expand_btn->add_css_class("flat");
-    expand_btn->set_tooltip_text("Show or hide this job's details, including source path, destination path, and UUID");
+    expand_btn->set_tooltip_text(_("Show or hide this job's details, including source path, destination path, and UUID"));
 
     btn_box->append(*ui.run_btn);
     btn_box->append(*ui.stop_btn);
@@ -530,7 +540,7 @@ void JobView::append_job_row(size_t index) {
     ui.status_label->add_css_class("caption");
     ui.status_label->add_css_class("dim-label");
     if (!job.last_status.empty()) {
-        ui.status_label->set_text("Last run: " + job.last_status);
+        ui.status_label->set_text(std::string(_("Last run: ")) + translate_status(job.last_status));
         ui.status_label->set_visible(true);
     } else {
         ui.status_label->set_visible(false);
@@ -555,18 +565,18 @@ void JobView::append_job_row(size_t index) {
         ui.run_btn->set_visible(false);
         ui.stop_btn->set_visible(true);
         ui.progress->set_visible(false);
-        ui.status_label->set_text("Mounted");
+        ui.status_label->set_text(_("Mounted"));
         ui.status_label->set_visible(true);
     } else if (job.running) {
         ui.run_btn->set_visible(false);
         ui.stop_btn->set_visible(true);
         ui.progress->set_visible(true);
-        ui.status_label->set_text("Running...");
+        ui.status_label->set_text(_("Running..."));
         ui.status_label->set_visible(true);
     } else if (job.type == rclone::JobType::Mount && job.active) {
         ui.run_btn->set_visible(false);
         ui.stop_btn->set_visible(true);
-        ui.status_label->set_text("Mounted");
+        ui.status_label->set_text(_("Mounted"));
         ui.status_label->set_visible(true);
     }
 
@@ -668,7 +678,7 @@ void JobView::on_run_job(size_t index) {
         ui.progress->set_visible(true);
     }
     ui.status_label->set_visible(true);
-    ui.status_label->set_text("Starting...");
+    ui.status_label->set_text(_("Starting..."));
 
     // Capture job data by value so the async callback is safe if m_jobs is modified
     auto src      = m_jobs[index].source;
@@ -680,7 +690,7 @@ void JobView::on_run_job(size_t index) {
 
     if (!m_daemon_proxy || !m_daemon_proxy->is_connected()) {
         if (index < m_ui_rows.size()) {
-            m_ui_rows[index].status_label->set_text("Error: not connected to daemon");
+            m_ui_rows[index].status_label->set_text(_("Error: not connected to daemon"));
             m_ui_rows[index].run_btn->set_visible(true);
             m_ui_rows[index].stop_btn->set_visible(false);
         }
@@ -690,14 +700,14 @@ void JobView::on_run_job(size_t index) {
     m_daemon_proxy->run_job(index, [this, index, type](auto result) {
         if (!result.has_value()) {
             if (index < m_ui_rows.size()) {
-                m_ui_rows[index].status_label->set_text("Error: " + result.error());
+                m_ui_rows[index].status_label->set_text(std::string(_("Error: ")) + result.error());
                 m_ui_rows[index].run_btn->set_visible(true);
                 m_ui_rows[index].stop_btn->set_visible(false);
             }
             return;
         }
         if (index < m_ui_rows.size()) {
-            m_ui_rows[index].status_label->set_text(type == rclone::JobType::Mount ? "Mounted" : "Running...");
+            m_ui_rows[index].status_label->set_text(type == rclone::JobType::Mount ? _("Mounted") : _("Running..."));
         }
     });
 }
@@ -707,7 +717,7 @@ void JobView::on_stop_job(size_t index) {
 
     if (!m_daemon_proxy || !m_daemon_proxy->is_connected()) {
         if (index < m_ui_rows.size()) {
-            m_ui_rows[index].status_label->set_text("Error: not connected to daemon");
+            m_ui_rows[index].status_label->set_text(_("Error: not connected to daemon"));
         }
         return;
     }
@@ -716,9 +726,9 @@ void JobView::on_stop_job(size_t index) {
         if (index >= m_ui_rows.size()) return;
         m_ui_rows[index].poll_timer.disconnect();
         if (!result.has_value()) {
-            m_ui_rows[index].status_label->set_text("Error: " + result.error());
+            m_ui_rows[index].status_label->set_text(std::string(_("Error: ")) + result.error());
         } else {
-            m_ui_rows[index].status_label->set_text("Stopped");
+            m_ui_rows[index].status_label->set_text(_("Stopped"));
         }
         m_ui_rows[index].run_btn->set_visible(true);
         m_ui_rows[index].stop_btn->set_visible(false);
@@ -847,7 +857,7 @@ void JobView::on_daemon_message(const nlohmann::json& msg) {
                 m_ui_rows[index].progress->set_visible(true);
             }
             m_ui_rows[index].status_label->set_visible(true);
-            m_ui_rows[index].status_label->set_text("Starting...");
+            m_ui_rows[index].status_label->set_text(_("Starting..."));
         }
     } else if (type == "job_progress") {
         auto index = payload.value("index", static_cast<size_t>(0));
@@ -863,12 +873,12 @@ void JobView::on_daemon_message(const nlohmann::json& msg) {
         double frac = (total_bytes > 0) ? static_cast<double>(bytes) / total_bytes : 0.0;
         ui.progress->set_fraction(frac);
 
-        std::string text = std::format("{}/{} files | {}",
-            transfers, total_transfers, format_speed(speed));
+        std::string text = std::format("{}/{} {} | {}",
+            transfers, total_transfers, ngettext("file", "files", total_transfers), format_speed(speed));
         if (payload.contains("eta")) {
             auto eta = payload["eta"].get<double>();
             int secs = static_cast<int>(eta);
-            text += std::format(" | ETA {}:{:02d}", secs / 60, secs % 60);
+            text += std::format(" | {} {}:{:02d}", _("ETA"), secs / 60, secs % 60);
         }
         ui.status_label->set_text(text);
     } else if (type == "job_completed") {
@@ -886,7 +896,7 @@ void JobView::on_daemon_message(const nlohmann::json& msg) {
             bool is_mount = (index < m_jobs.size() && m_jobs[index].type == rclone::JobType::Mount);
 
             if (success) {
-                ui.status_label->set_text("Last run: success");
+                ui.status_label->set_text(_("Last run: success"));
                 if (index < m_jobs.size()) {
                     m_jobs[index].last_status = "success";
                     m_jobs[index].last_run = now;
@@ -899,7 +909,7 @@ void JobView::on_daemon_message(const nlohmann::json& msg) {
                     ui.stop_btn->set_visible(false);
                 }
             } else {
-                ui.status_label->set_text("Last run: error");
+                ui.status_label->set_text(_("Last run: error"));
                 if (index < m_jobs.size()) {
                     m_jobs[index].last_status = "error";
                     m_jobs[index].last_run = now;
@@ -929,7 +939,7 @@ void JobView::on_daemon_message(const nlohmann::json& msg) {
             ui.progress->set_visible(false);
 
             bool is_mount = (index < m_jobs.size() && m_jobs[index].type == rclone::JobType::Mount);
-            ui.status_label->set_text(is_mount ? "Unmounted" : "Stopped");
+            ui.status_label->set_text(is_mount ? _("Unmounted") : _("Stopped"));
             ui.run_btn->set_visible(true);
             ui.stop_btn->set_visible(false);
             ui.stats_label->set_visible(false);

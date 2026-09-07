@@ -1,6 +1,10 @@
 [Desktop Entry]
 Name=Mt. Sync
+Name[fr]=Mt. Sync
+Name[de]=Mt. Sync
 Comment=Mount or sync cloud storage anywhere
+Comment[fr]=Montez ou synchronisez un stockage réseau où que vous soyez
+Comment[de]=Netzwerkspeicher überall mounten oder synchronisieren
 Exec=mtsync
 Icon=com.mtsync.MtSync
 Type=Application

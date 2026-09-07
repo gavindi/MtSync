@@ -22,6 +22,7 @@
 #include "widgets/adw_wrapper.hpp"
 #include <adwaita.h>
 #include <format>
+#include <glibmm/i18n.h>
 #include <random>
 #include <sstream>
 
@@ -32,13 +33,13 @@ namespace {
 struct Preset { const char* label; const char* minute; const char* hour;
                 const char* dom;   const char* month;  const char* dow; };
 
-constexpr Preset k_presets[] = {
-    {"Every minute", "*", "*", "*", "*", "*"},
-    {"Hourly",       "0", "*", "*", "*", "*"},
-    {"Daily",        "0", "0", "*", "*", "*"},
-    {"Weekly",       "0", "0", "*", "*", "0"},
-    {"Monthly",      "0", "0", "1", "*", "*"},
-    {"Custom",       nullptr, nullptr, nullptr, nullptr, nullptr},
+const Preset k_presets[] = {
+    {_("Every minute"), "*", "*", "*", "*", "*"},
+    {_("Hourly"),       "0", "*", "*", "*", "*"},
+    {_("Daily"),        "0", "0", "*", "*", "*"},
+    {_("Weekly"),       "0", "0", "*", "*", "0"},
+    {_("Monthly"),      "0", "0", "1", "*", "*"},
+    {_("Custom"),       nullptr, nullptr, nullptr, nullptr, nullptr},
 };
 
 constexpr guint job_type_to_index(rclone::JobType t) {
@@ -84,7 +85,7 @@ JobEditDialog::JobEditDialog(rclone::JobType type,
 void JobEditDialog::setup_ui(rclone::JobType initial_type,
                                const std::string& initial_src,
                                const std::string& initial_dst) {
-    set_title(m_editing ? "Edit Job" : "New Job");
+    set_title(m_editing ? _("Edit Job") : _("New Job"));
     set_default_size(840, -1);
     set_modal(true);
     set_destroy_with_parent(true);
@@ -109,7 +110,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     job_clamp->set_margin_start(12);
     job_clamp->set_margin_end(12);
     adw_view_stack_page_set_icon_name(
-        adw::view_stack_add_titled(stack, job_clamp, "job", "Job"),
+        adw::view_stack_add_titled(stack, job_clamp, "job", _("Job")),
         "document-edit-symbolic");
 
     auto* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 18);
@@ -117,17 +118,17 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Job Configuration group
     auto* group = adw::preferences_group();
-    adw::preferences_group_set_title(group, "Job Configuration");
+    adw::preferences_group_set_title(group, _("Job Configuration"));
     vbox->append(*group);
 
     // Type combo row
     auto* type_list = gtk_string_list_new(nullptr);
-    gtk_string_list_append(type_list, "Sync");
-    gtk_string_list_append(type_list, "Copy");
-    gtk_string_list_append(type_list, "Move");
-    gtk_string_list_append(type_list, "Mount");
+    gtk_string_list_append(type_list, _("Sync"));
+    gtk_string_list_append(type_list, _("Copy"));
+    gtk_string_list_append(type_list, _("Move"));
+    gtk_string_list_append(type_list, _("Mount"));
     m_type_combo = adw::combo_row();
-    adw::preferences_row_set_title(m_type_combo, "Type");
+    adw::preferences_row_set_title(m_type_combo, _("Type"));
     adw::combo_row_set_string_list_model(m_type_combo, type_list);
     g_object_unref(type_list);
     adw_combo_row_set_selected(ADW_COMBO_ROW(m_type_combo->gobj()),
@@ -136,7 +137,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Source
     m_source_entry = adw::entry_row();
-    adw::preferences_row_set_title(m_source_entry, "Source (remote:path)");
+    adw::preferences_row_set_title(m_source_entry, _("Source (remote:path)"));
     if (!initial_src.empty())
         adw::entry_row_set_text(m_source_entry, initial_src.c_str());
     else if (m_editing)
@@ -145,7 +146,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Destination
     m_dest_entry = adw::entry_row();
-    adw::preferences_row_set_title(m_dest_entry, "Destination (remote:path)");
+    adw::preferences_row_set_title(m_dest_entry, _("Destination (remote:path)"));
     if (!initial_dst.empty())
         adw::entry_row_set_text(m_dest_entry, initial_dst.c_str());
     else if (m_editing)
@@ -154,10 +155,10 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // File filters
     m_includes_entry = adw::entry_row();
-    adw::preferences_row_set_title(m_includes_entry, "File Include Filters (space-separated patterns)");
+    adw::preferences_row_set_title(m_includes_entry, _("File Include Filters (space-separated patterns)"));
     gtk_text_set_placeholder_text(
         GTK_TEXT(gtk_editable_get_delegate(GTK_EDITABLE(m_includes_entry->gobj()))),
-        "All files");
+        _("All files"));
     if (!m_includes.empty()) {
         std::string joined;
         for (size_t i = 0; i < m_includes.size(); ++i) {
@@ -171,24 +172,24 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Dry Run
     m_dry_run_switch = adw::switch_row();
-    adw::preferences_row_set_title(m_dry_run_switch, "Dry Run");
-    m_dry_run_switch->set_tooltip_text("Simulate the transfer without moving or modifying any files — useful for previewing what would change before committing");
+    adw::preferences_row_set_title(m_dry_run_switch, _("Dry Run"));
+    m_dry_run_switch->set_tooltip_text(_("Simulate the transfer without moving or modifying any files — useful for previewing what would change before committing"));
     adw::switch_row_set_active(m_dry_run_switch, m_editing ? m_editing->dry_run : true);
     m_dry_run_switch->set_visible(initial_type != rclone::JobType::Mount);
     adw::preferences_group_add(group, m_dry_run_switch);
 
     // Bi-directional sync (Sync only)
     m_bisync_switch = adw::switch_row();
-    adw::preferences_row_set_title(m_bisync_switch, "Bi-directional sync");
-    m_bisync_switch->set_tooltip_text("Synchronise changes in both directions so that new or modified files on either side are propagated to the other; uses rclone bisync");
+    adw::preferences_row_set_title(m_bisync_switch, _("Bi-directional sync"));
+    m_bisync_switch->set_tooltip_text(_("Synchronise changes in both directions so that new or modified files on either side are propagated to the other; uses rclone bisync"));
     m_bisync_switch->set_visible(initial_type == rclone::JobType::Sync);
     if (m_editing) adw::switch_row_set_active(m_bisync_switch, m_editing->bisync);
     adw::preferences_group_add(group, m_bisync_switch);
 
     // Force delete propagation (Bi-directional sync only)
     m_bisync_force_switch = adw::switch_row();
-    adw::preferences_row_set_title(m_bisync_force_switch, "Force Deletes");
-    m_bisync_force_switch->set_tooltip_text("Allow bi-directional sync to propagate deletions. rclone's delete-safety check is unreliable when run this way, so without this enabled ANY deletion on either side — even a single file — will block the sync until you intervene manually. Enabling this removes that protection entirely, including for large accidental deletions.");
+    adw::preferences_row_set_title(m_bisync_force_switch, _("Force Deletes"));
+    m_bisync_force_switch->set_tooltip_text(_("Allow bi-directional sync to propagate deletions. rclone's delete-safety check is unreliable when run this way, so without this enabled ANY deletion on either side — even a single file — will block the sync until you intervene manually. Enabling this removes that protection entirely, including for large accidental deletions."));
     m_bisync_force_switch->set_visible(initial_type == rclone::JobType::Sync
         && m_bisync_switch->get_visible() && adw::switch_row_get_active(m_bisync_switch));
     if (m_editing) adw::switch_row_set_active(m_bisync_force_switch, m_editing->bisync_force_deletes);
@@ -196,16 +197,16 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Enable Checksum
     m_enable_checksum_switch = adw::switch_row();
-    adw::preferences_row_set_title(m_enable_checksum_switch, "Enable Checksum");
-    m_enable_checksum_switch->set_tooltip_text("Verify each transferred file's checksum against the source — slower but guarantees bit-perfect copies");
+    adw::preferences_row_set_title(m_enable_checksum_switch, _("Enable Checksum"));
+    m_enable_checksum_switch->set_tooltip_text(_("Verify each transferred file's checksum against the source — slower but guarantees bit-perfect copies"));
     if (m_editing) adw::switch_row_set_active(m_enable_checksum_switch, !m_editing->ignore_checksum);
     m_enable_checksum_switch->set_visible(initial_type != rclone::JobType::Mount);
     adw::preferences_group_add(group, m_enable_checksum_switch);
 
     // Mount at Start-up (Mount only)
     m_mount_startup_switch = adw::switch_row();
-    adw::preferences_row_set_title(m_mount_startup_switch, "Mount at Start-up");
-    m_mount_startup_switch->set_tooltip_text("Automatically mount this remote when the Mt. Sync daemon starts, so the mount point is available on every login without manual intervention");
+    adw::preferences_row_set_title(m_mount_startup_switch, _("Mount at Start-up"));
+    m_mount_startup_switch->set_tooltip_text(_("Automatically mount this remote when the Mt. Sync daemon starts, so the mount point is available on every login without manual intervention"));
     m_mount_startup_switch->set_visible(initial_type == rclone::JobType::Mount);
     if (m_editing) adw::switch_row_set_active(m_mount_startup_switch, m_editing->mount_at_startup);
     adw::preferences_group_add(group, m_mount_startup_switch);
@@ -217,7 +218,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     gtk_string_list_append(cache_list, "writes");
     gtk_string_list_append(cache_list, "full");
     m_cache_mode_row = adw::combo_row();
-    adw::preferences_row_set_title(m_cache_mode_row, "Cache Mode");
+    adw::preferences_row_set_title(m_cache_mode_row, _("Cache Mode"));
     adw::combo_row_set_string_list_model(m_cache_mode_row, cache_list);
     g_object_unref(cache_list);
     m_cache_mode_row->set_visible(initial_type == rclone::JobType::Mount);
@@ -236,7 +237,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     // ── "Schedule" tab ────────────────────────────────────────────────────
     auto* sched_outer = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
     adw_view_stack_page_set_icon_name(
-        adw::view_stack_add_titled(stack, sched_outer, "schedule", "Schedule"),
+        adw::view_stack_add_titled(stack, sched_outer, "schedule", _("Schedule")),
         "alarm-symbolic");
 
     // Enable Schedule switch (full-width, above two-column area)
@@ -248,8 +249,8 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     sched_outer->append(*sched_enable_group);
 
     m_schedule_switch = adw::switch_row();
-    adw::preferences_row_set_title(m_schedule_switch, "Enable Schedule");
-    m_schedule_switch->set_tooltip_text("Run this job automatically on the cron schedule defined below instead of only when started manually");
+    adw::preferences_row_set_title(m_schedule_switch, _("Enable Schedule"));
+    m_schedule_switch->set_tooltip_text(_("Run this job automatically on the cron schedule defined below instead of only when started manually"));
     bool sched_on = m_editing && m_editing->schedule_enabled;
     adw::switch_row_set_active(m_schedule_switch, sched_on);
     adw::preferences_group_add(sched_enable_group, m_schedule_switch);
@@ -281,7 +282,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     auto* preset_list = gtk_string_list_new(nullptr);
     for (auto& p : k_presets) gtk_string_list_append(preset_list, p.label);
     m_preset_combo = adw::combo_row();
-    adw::preferences_row_set_title(m_preset_combo, "Preset");
+    adw::preferences_row_set_title(m_preset_combo, _("Preset"));
     adw::combo_row_set_string_list_model(m_preset_combo, preset_list);
     g_object_unref(preset_list);
     adw::preferences_group_add(preset_group, m_preset_combo);
@@ -294,7 +295,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
         auto* btn = Gtk::make_managed<Gtk::Button>();
         btn->set_icon_name("edit-clear-symbolic");
         btn->add_css_class("flat");
-        btn->set_tooltip_text("Reset this cron field to wildcard (*), which matches every minute, hour, or day");
+        btn->set_tooltip_text(_("Reset this cron field to wildcard (*), which matches every minute, hour, or day"));
         btn->signal_clicked().connect([row]() { adw::entry_row_set_text(row, "*"); });
         adw_entry_row_add_suffix(ADW_ENTRY_ROW(row->gobj()), GTK_WIDGET(btn->gobj()));
         return row;
@@ -302,23 +303,23 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Minutes / Hours group
     auto* time_group = adw::preferences_group();
-    adw::preferences_group_set_title(time_group, "Minutes / Hours");
+    adw::preferences_group_set_title(time_group, _("Minutes / Hours"));
     adw_preferences_group_set_description(
         ADW_PREFERENCES_GROUP(time_group->gobj()),
-        "Use * for every value, a number, a range (1-5), a list (1,3), or a step (*/2).");
+        _("Use * for every value, a number, a range (1-5), a list (1,3), or a step (*/2)."));
     left_vbox->append(*time_group);
 
-    m_minute_entry = make_cron_entry("Minute", m_editing ? m_editing->cron_minute.c_str() : "0");
-    m_hour_entry   = make_cron_entry("Hour",   m_editing ? m_editing->cron_hour.c_str()   : "*");
+    m_minute_entry = make_cron_entry(_("Minute"), m_editing ? m_editing->cron_minute.c_str() : "0");
+    m_hour_entry   = make_cron_entry(_("Hour"),   m_editing ? m_editing->cron_hour.c_str()   : "*");
     adw::preferences_group_add(time_group, m_minute_entry);
     adw::preferences_group_add(time_group, m_hour_entry);
 
     // Days group
     auto* days_group = adw::preferences_group();
-    adw::preferences_group_set_title(days_group, "Days");
+    adw::preferences_group_set_title(days_group, _("Days"));
     left_vbox->append(*days_group);
 
-    m_dom_entry = make_cron_entry("Day of Month", m_editing ? m_editing->cron_day.c_str() : "*");
+    m_dom_entry = make_cron_entry(_("Day of Month"), m_editing ? m_editing->cron_day.c_str() : "*");
     adw::preferences_group_add(days_group, m_dom_entry);
 
     // Day-of-week checkboxes as a plain row inside the preferences group
@@ -327,13 +328,13 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     dow_row->set_margin_bottom(8);
     dow_row->set_margin_start(12);
     dow_row->set_margin_end(12);
-    auto* dow_label = Gtk::make_managed<Gtk::Label>("Day of Week");
+    auto* dow_label = Gtk::make_managed<Gtk::Label>(_("Day of Week"));
     dow_label->set_xalign(0.0f);
     dow_label->add_css_class("caption");
     dow_label->add_css_class("dim-label");
     dow_row->append(*dow_label);
     auto* dow_checks_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
-    constexpr const char* dow_names[] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
+    const char* dow_names[] = {_("Sun"),_("Mon"),_("Tue"),_("Wed"),_("Thu"),_("Fri"),_("Sat")};
     for (int i = 0; i < 7; ++i) {
         m_dow_checks[i] = Gtk::make_managed<Gtk::CheckButton>(dow_names[i]);
         m_dow_checks[i]->set_active(true);
@@ -344,7 +345,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Months group
     auto* months_group = adw::preferences_group();
-    adw::preferences_group_set_title(months_group, "Months");
+    adw::preferences_group_set_title(months_group, _("Months"));
     left_vbox->append(*months_group);
 
     auto* months_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 4);
@@ -352,8 +353,9 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     months_box->set_margin_bottom(8);
     months_box->set_margin_start(12);
     months_box->set_margin_end(12);
-    constexpr const char* month_names[] = {
-        "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
+    const char* month_names[] = {
+        _("Jan"),_("Feb"),_("Mar"),_("Apr"),_("May"),_("Jun"),
+        _("Jul"),_("Aug"),_("Sep"),_("Oct"),_("Nov"),_("Dec")
     };
     auto* months_row1 = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     auto* months_row2 = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
@@ -407,7 +409,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     right_vbox->set_margin_end(16);
     sched_columns->append(*right_vbox);
 
-    auto* preview_title = Gtk::make_managed<Gtk::Label>("Schedule Preview");
+    auto* preview_title = Gtk::make_managed<Gtk::Label>(_("Schedule Preview"));
     preview_title->add_css_class("heading");
     preview_title->set_xalign(0.0f);
     right_vbox->append(*preview_title);
@@ -432,8 +434,10 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     {
         GDateTime* now = g_date_time_new_now_local();
         GTimeZone* tz  = g_date_time_get_timezone(now);
+        const char* tz_id = g_time_zone_get_identifier(tz);
         auto* tz_lbl = Gtk::make_managed<Gtk::Label>(
-            std::format("System Time Zone: {}", g_time_zone_get_identifier(tz)).c_str());
+            std::vformat(_("System Time Zone: {}"),
+                std::make_format_args(tz_id)).c_str());
         tz_lbl->add_css_class("dim-label");
         tz_lbl->add_css_class("caption");
         tz_lbl->set_xalign(0.0f);
@@ -465,7 +469,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     adv_clamp->set_margin_start(12);
     adv_clamp->set_margin_end(12);
     adw_view_stack_page_set_icon_name(
-        adw::view_stack_add_titled(stack, adv_clamp, "advanced", "Advanced"),
+        adw::view_stack_add_titled(stack, adv_clamp, "advanced", _("Advanced")),
         "preferences-other-symbolic");
 
     auto* adv_vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 18);
@@ -475,7 +479,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     adv_vbox->append(*adv_group);
 
     m_bandwidth_entry = adw::entry_row();
-    adw::preferences_row_set_title(m_bandwidth_entry, "Bandwidth Limit (e.g. 10M)");
+    adw::preferences_row_set_title(m_bandwidth_entry, _("Bandwidth Limit (e.g. 10M)"));
     if (m_editing && !m_editing->bandwidth.empty())
         adw::entry_row_set_text(m_bandwidth_entry, m_editing->bandwidth.c_str());
     adw::preferences_group_add(adv_group, m_bandwidth_entry);
@@ -486,7 +490,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
                      ? m_editing->parallel_transfers
                      : settings.parallel_transfers;
         m_parallel_transfers_entry = adw::entry_row();
-        adw::preferences_row_set_title(m_parallel_transfers_entry, "Parallel Transfers");
+        adw::preferences_row_set_title(m_parallel_transfers_entry, _("Parallel Transfers"));
         adw::entry_row_set_text(m_parallel_transfers_entry,
             std::format("{}", pt_val).c_str());
         adw::preferences_group_add(adv_group, m_parallel_transfers_entry);
@@ -495,33 +499,33 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
                     ? m_editing->retries
                     : settings.retries;
         m_retries_entry = adw::entry_row();
-        adw::preferences_row_set_title(m_retries_entry, "Retries on Failure");
+        adw::preferences_row_set_title(m_retries_entry, _("Retries on Failure"));
         adw::entry_row_set_text(m_retries_entry, std::format("{}", r_val).c_str());
         adw::preferences_group_add(adv_group, m_retries_entry);
     }
 
     m_extra_flags_entry = adw::entry_row();
-    adw::preferences_row_set_title(m_extra_flags_entry, "Extra rclone Flags");
+    adw::preferences_row_set_title(m_extra_flags_entry, _("Extra rclone Flags"));
     adw_entry_row_set_input_hints(ADW_ENTRY_ROW(m_extra_flags_entry->gobj()), GTK_INPUT_HINT_NO_SPELLCHECK);
     if (m_editing && !m_editing->extra_flags.empty())
         adw::entry_row_set_text(m_extra_flags_entry, m_editing->extra_flags.c_str());
     adw::preferences_group_add(adv_group, m_extra_flags_entry);
 
     // ── Buttons (outside tab stack) ───────────────────────────────────────
-    m_action_btn = Gtk::make_managed<Gtk::Button>(sched_on ? "Schedule" : "Run Now");
+    m_action_btn = Gtk::make_managed<Gtk::Button>(sched_on ? _("Schedule") : _("Run Now"));
     m_action_btn->add_css_class("destructive-action");
-    m_action_btn->set_tooltip_text("Run or schedule this job immediately with the current settings");
+    m_action_btn->set_tooltip_text(_("Run or schedule this job immediately with the current settings"));
     m_action_btn->signal_clicked().connect(sigc::mem_fun(*this, &JobEditDialog::on_commit));
 
-    m_save_btn = Gtk::make_managed<Gtk::Button>("Save");
+    m_save_btn = Gtk::make_managed<Gtk::Button>(_("Save"));
     m_save_btn->add_css_class("suggested-action");
     m_save_btn->set_visible(!sched_on);
-    m_save_btn->set_tooltip_text("Save this job's configuration without running or scheduling it now");
+    m_save_btn->set_tooltip_text(_("Save this job's configuration without running or scheduling it now"));
     m_save_btn->signal_clicked().connect(sigc::mem_fun(*this, &JobEditDialog::on_save));
 
-    auto* cancel_btn = Gtk::make_managed<Gtk::Button>("Cancel");
+    auto* cancel_btn = Gtk::make_managed<Gtk::Button>(_("Cancel"));
     cancel_btn->add_css_class("success");
-    cancel_btn->set_tooltip_text("Discard any unsaved changes and close this dialog");
+    cancel_btn->set_tooltip_text(_("Discard any unsaved changes and close this dialog"));
     cancel_btn->signal_clicked().connect([this]() { close(); });
 
     auto* btn_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 12);
@@ -564,7 +568,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
         G_CALLBACK(+[](GObject*, GParamSpec*, gpointer data) {
             auto* self = static_cast<JobEditDialog*>(data);
             bool on = adw::switch_row_get_active(self->m_schedule_switch);
-            self->m_action_btn->set_label(on ? "Schedule" : "Run Now");
+            self->m_action_btn->set_label(on ? _("Schedule") : _("Run Now"));
             self->m_save_btn->set_visible(!on);
         }), this);
 

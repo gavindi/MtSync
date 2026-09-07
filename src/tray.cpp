@@ -18,6 +18,7 @@
 
 #include "tray.hpp"
 #include <cairo/cairo.h>
+#include <glibmm/i18n.h>
 #include <glibmm/main.h>
 #include <cmath>
 #include <cstring>
@@ -200,8 +201,8 @@ static GVariant* make_menu_layout() {
     g_variant_builder_init(&title_children, G_VARIANT_TYPE("av"));
     g_variant_builder_add(&children, "v", g_variant_new("(ia{sv}av)", 3, &title_props, &title_children));
     g_variant_builder_add(&children, "v", make_separator_item(4));
-    g_variant_builder_add(&children, "v", make_menu_item(1, "Open"));
-    g_variant_builder_add(&children, "v", make_menu_item(2, "Quit"));
+    g_variant_builder_add(&children, "v", make_menu_item(1, _("Open")));
+    g_variant_builder_add(&children, "v", make_menu_item(2, _("Quit")));
     return g_variant_new("(ia{sv}av)", 0, &props, &children);
 }
 

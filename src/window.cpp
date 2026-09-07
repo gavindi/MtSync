@@ -18,6 +18,7 @@
 
 #include "window.hpp"
 #include "widgets/adw_wrapper.hpp"
+#include <glibmm/i18n.h>
 
 namespace mtsync {
 
@@ -50,23 +51,23 @@ MtSyncWindow::MtSyncWindow(rclone::RcloneManager& manager, DaemonProxy* daemon_p
     m_view_stack = adw::view_stack_new();
 
     auto* page1 = adw::view_stack_add_titled(
-        m_view_stack, &m_browser_view, "browser", "Browse");
+        m_view_stack, &m_browser_view, "browser", _("Browse"));
     adw_view_stack_page_set_icon_name(page1, "folder-symbolic");
 
     auto* page2 = adw::view_stack_add_titled(
-        m_view_stack, &m_job_view, "jobs", "Jobs");
+        m_view_stack, &m_job_view, "jobs", _("Jobs"));
     adw_view_stack_page_set_icon_name(page2, "emblem-synchronizing-symbolic");
 
     auto* page3 = adw::view_stack_add_titled(
-        m_view_stack, &m_remotes_view, "backends", "Remotes");
+        m_view_stack, &m_remotes_view, "backends", _("Remotes"));
     adw_view_stack_page_set_icon_name(page3, "network-server-symbolic");
 
     auto* page4 = adw::view_stack_add_titled(
-        m_view_stack, &m_settings_view, "settings", "Settings");
+        m_view_stack, &m_settings_view, "settings", _("Settings"));
     adw_view_stack_page_set_icon_name(page4, "preferences-other-symbolic");
 
     auto* page5 = adw::view_stack_add_titled(
-        m_view_stack, &m_about_view, "about", "About");
+        m_view_stack, &m_about_view, "about", _("About"));
     adw_view_stack_page_set_icon_name(page5, "help-about-symbolic");
 
     auto* switcher = adw::view_switcher(m_view_stack);

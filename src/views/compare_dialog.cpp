@@ -21,6 +21,7 @@
 #include <adwaita.h>
 #include <algorithm>
 #include <format>
+#include <glibmm/i18n.h>
 #include <unordered_map>
 
 namespace mtsync {
@@ -127,7 +128,7 @@ CompareDialog::CompareDialog(const std::string& src,
                              const std::string& dst,
                              rclone::RcloneManager& manager)
     : m_src(src), m_dst(dst), m_manager(&manager) {
-    set_title("Compare");
+    set_title(_("Compare"));
     set_default_size(1100, 640);
     set_modal(true);
     set_destroy_with_parent(true);
@@ -176,12 +177,12 @@ void CompareDialog::setup_ui() {
     m_delete_btn->set_icon_name("edit-delete-symbolic");
     m_delete_btn->add_css_class("destructive-action");
     m_delete_btn->set_sensitive(false);
-    m_delete_btn->set_tooltip_text("Permanently delete the selected files from the source directory — this cannot be undone");
+    m_delete_btn->set_tooltip_text(_("Permanently delete the selected files from the source directory — this cannot be undone"));
     m_delete_btn->signal_clicked().connect([this]() { on_delete_clicked(); });
 
-    m_copy_btn = Gtk::make_managed<Gtk::Button>("Copy →");
+    m_copy_btn = Gtk::make_managed<Gtk::Button>(_("Copy →"));
     m_copy_btn->set_sensitive(false);
-    m_copy_btn->set_tooltip_text("Copy the selected source-only files into the destination directory");
+    m_copy_btn->set_tooltip_text(_("Copy the selected source-only files into the destination directory"));
     m_copy_btn->signal_clicked().connect([this]() { on_copy_clicked(); });
 
     action_bar->append(*m_delete_btn);
@@ -198,31 +199,31 @@ void CompareDialog::setup_ui() {
 
     m_filter_left_btn = Gtk::make_managed<Gtk::ToggleButton>("←");
     m_filter_left_btn->add_css_class("flat");
-    m_filter_left_btn->set_tooltip_text("Toggle visibility of files that exist only in the source (left pane) and are absent from the destination");
+    m_filter_left_btn->set_tooltip_text(_("Toggle visibility of files that exist only in the source (left pane) and are absent from the destination"));
     m_filter_left_btn->set_active(true);
     m_filter_left_btn->signal_toggled().connect([this]() { apply_filters(); });
 
     m_filter_right_btn = Gtk::make_managed<Gtk::ToggleButton>("→");
     m_filter_right_btn->add_css_class("flat");
-    m_filter_right_btn->set_tooltip_text("Toggle visibility of files that exist only in the destination (right pane) and are absent from the source");
+    m_filter_right_btn->set_tooltip_text(_("Toggle visibility of files that exist only in the destination (right pane) and are absent from the source"));
     m_filter_right_btn->set_active(true);
     m_filter_right_btn->signal_toggled().connect([this]() { apply_filters(); });
 
     m_filter_equal_btn = Gtk::make_managed<Gtk::ToggleButton>("=");
     m_filter_equal_btn->add_css_class("flat");
-    m_filter_equal_btn->set_tooltip_text("Toggle visibility of files that are identical in both source and destination");
+    m_filter_equal_btn->set_tooltip_text(_("Toggle visibility of files that are identical in both source and destination"));
     m_filter_equal_btn->set_active(true);
     m_filter_equal_btn->signal_toggled().connect([this]() { apply_filters(); });
 
     m_filter_diff_btn = Gtk::make_managed<Gtk::ToggleButton>("≠");
     m_filter_diff_btn->add_css_class("flat");
-    m_filter_diff_btn->set_tooltip_text("Toggle visibility of files present in both directories whose content or size differs");
+    m_filter_diff_btn->set_tooltip_text(_("Toggle visibility of files present in both directories whose content or size differs"));
     m_filter_diff_btn->set_active(true);
     m_filter_diff_btn->signal_toggled().connect([this]() { apply_filters(); });
 
     m_filter_error_btn = Gtk::make_managed<Gtk::ToggleButton>("!");
     m_filter_error_btn->add_css_class("flat");
-    m_filter_error_btn->set_tooltip_text("Toggle visibility of files that could not be compared due to a read or permission error");
+    m_filter_error_btn->set_tooltip_text(_("Toggle visibility of files that could not be compared due to a read or permission error"));
     m_filter_error_btn->set_active(true);
     m_filter_error_btn->signal_toggled().connect([this]() { apply_filters(); });
 
@@ -239,16 +240,16 @@ void CompareDialog::setup_ui() {
     action_bar->append(*spacer_r);
 
     // Right group — destination-side operations
-    m_dst_copy_btn = Gtk::make_managed<Gtk::Button>("← Copy");
+    m_dst_copy_btn = Gtk::make_managed<Gtk::Button>(_("← Copy"));
     m_dst_copy_btn->set_sensitive(false);
-    m_dst_copy_btn->set_tooltip_text("Copy the selected destination-only files back into the source directory");
+    m_dst_copy_btn->set_tooltip_text(_("Copy the selected destination-only files back into the source directory"));
     m_dst_copy_btn->signal_clicked().connect([this]() { on_dst_copy_clicked(); });
 
     m_dst_delete_btn = Gtk::make_managed<Gtk::Button>();
     m_dst_delete_btn->set_icon_name("edit-delete-symbolic");
     m_dst_delete_btn->add_css_class("destructive-action");
     m_dst_delete_btn->set_sensitive(false);
-    m_dst_delete_btn->set_tooltip_text("Permanently delete the selected files from the destination directory — this cannot be undone");
+    m_dst_delete_btn->set_tooltip_text(_("Permanently delete the selected files from the destination directory — this cannot be undone"));
     m_dst_delete_btn->signal_clicked().connect([this]() { on_dst_delete_clicked(); });
 
     action_bar->append(*m_dst_copy_btn);
@@ -268,19 +269,19 @@ void CompareDialog::setup_ui() {
     auto* spinner = adw::spinner();
     spinner->set_size_request(32, 32);
     loading_box->append(*spinner);
-    auto* loading_lbl = Gtk::make_managed<Gtk::Label>("Comparing…");
+    auto* loading_lbl = Gtk::make_managed<Gtk::Label>(_("Comparing…"));
     loading_lbl->add_css_class("dim-label");
     loading_box->append(*loading_lbl);
 
-    auto* hint_lbl = Gtk::make_managed<Gtk::Label>("Large scans can take a long time");
+    auto* hint_lbl = Gtk::make_managed<Gtk::Label>(_("Large scans can take a long time"));
     hint_lbl->add_css_class("dim-label");
     hint_lbl->set_margin_top(4);
     loading_box->append(*hint_lbl);
 
-    auto* cancel_btn = Gtk::make_managed<Gtk::Button>("Cancel");
+    auto* cancel_btn = Gtk::make_managed<Gtk::Button>(_("Cancel"));
     cancel_btn->set_halign(Gtk::Align::CENTER);
     cancel_btn->set_margin_top(12);
-    cancel_btn->set_tooltip_text("Cancel the comparison scan and close this dialog");
+    cancel_btn->set_tooltip_text(_("Cancel the comparison scan and close this dialog"));
     cancel_btn->signal_clicked().connect([this]() {
         if (m_load_state) {
             m_load_state->cancelled = true;
@@ -313,7 +314,7 @@ void CompareDialog::setup_ui() {
     m_prev_btn->set_icon_name("go-previous-symbolic");
     m_prev_btn->add_css_class("flat");
     m_prev_btn->set_sensitive(false);
-    m_prev_btn->set_tooltip_text("Show the previous page of comparison results");
+    m_prev_btn->set_tooltip_text(_("Show the previous page of comparison results"));
     m_prev_btn->signal_clicked().connect([this]() { show_page(m_current_page - 1); });
 
     m_page_label = Gtk::make_managed<Gtk::Label>();
@@ -325,7 +326,7 @@ void CompareDialog::setup_ui() {
     m_next_btn->set_icon_name("go-next-symbolic");
     m_next_btn->add_css_class("flat");
     m_next_btn->set_sensitive(false);
-    m_next_btn->set_tooltip_text("Show the next page of comparison results");
+    m_next_btn->set_tooltip_text(_("Show the next page of comparison results"));
     m_next_btn->signal_clicked().connect([this]() { show_page(m_current_page + 1); });
 
     footer->append(*m_prev_btn);
@@ -530,13 +531,13 @@ void CompareDialog::build_column_view() {
     }));
 
     // Add all 7 columns with sort properties
-    m_column_view->append_column(make_str_col("Filename", "src-name", "src-name", 0.0f, 0, true));
-    m_column_view->append_column(make_size_col("Size",    "src-size", "src-size"));
-    m_column_view->append_column(make_date_col("Modified","src-mod", "src-mod"));
+    m_column_view->append_column(make_str_col(_("Filename"), "src-name", "src-name", 0.0f, 0, true));
+    m_column_view->append_column(make_size_col(_("Size"),    "src-size", "src-size"));
+    m_column_view->append_column(make_date_col(_("Modified"),"src-mod", "src-mod"));
     m_column_view->append_column(status_col);
-    m_column_view->append_column(make_str_col("Filename", "dst-name", "dst-name", 0.0f, 0, true));
-    m_column_view->append_column(make_size_col("Size",    "dst-size", "dst-size"));
-    m_column_view->append_column(make_date_col("Modified","dst-mod", "dst-mod"));
+    m_column_view->append_column(make_str_col(_("Filename"), "dst-name", "dst-name", 0.0f, 0, true));
+    m_column_view->append_column(make_size_col(_("Size"),    "dst-size", "dst-size"));
+    m_column_view->append_column(make_date_col(_("Modified"),"dst-mod", "dst-mod"));
 
     // Connect the ColumnView's sorter to the SortListModel to enable interactive sorting
     m_sort_model->set_sorter(m_column_view->get_sorter());
@@ -553,7 +554,7 @@ void CompareDialog::start_load(rclone::RcloneManager& manager) {
         state->done_count++;
         if (state->done_count < 3) return;
         if (!state->error.empty()) {
-            m_error_label->set_text("Error: " + state->error);
+            m_error_label->set_text(std::string(_("Error: ")) + state->error);
             m_stack->set_visible_child("error");
             return;
         }
@@ -712,8 +713,12 @@ void CompareDialog::show_page(int page) {
 }
 
 void CompareDialog::update_pagination_controls() {
-    m_page_label->set_text(std::format(
-        "Page {} of {}  ({} files)", m_current_page + 1, m_total_pages, m_filtered_file_count));
+    int page_no = m_current_page + 1;
+    int files   = m_filtered_file_count;
+    std::string files_str = std::vformat(ngettext("{} file", "{} files", files),
+        std::make_format_args(files));
+    m_page_label->set_text(std::vformat(_("Page {} of {}  ({})"),
+        std::make_format_args(page_no, m_total_pages, files_str)));
     m_prev_btn->set_sensitive(m_current_page > 0);
     m_next_btn->set_sensitive(m_current_page < m_total_pages - 1);
 }

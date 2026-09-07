@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.18 — Internationalisation (GNU gettext)
+
+- **Multi-language support via GNU gettext**: the entire user-facing UI is now translatable. Strings are wrapped in `_()` (`<glibmm/i18n.h>`) across all 13 UI files; plurals use `ngettext()` (file/folder counts in the Browse status bar, Compare dialog pagination, and job progress stats) and job statuses (`success`, `error`, `stopped`, `running`) are stored in English and translated only at display time via `translate_status()` in `job_view.cpp`. Runtime locale initialisation (`setlocale` + `bindtextdomain`/`bind_textdomain_codeset`/`textdomain`, domain `mtsync`) lives in a new `src/i18n.hpp` and is called from `main.cpp` so both the GUI and the `--daemon` process (notifications, tray tooltip) pick up the desktop language — no language picker needed
+- **Translation catalogs**: `po/mtsync.pot` (extracted from sources) plus complete `po/fr.po` and `po/de.po` catalogs (257/257 translated, validated with `msgfmt --check --check-format`). Build-time `.po` → `.mo` compilation and installation to `share/locale/<lang>/LC_MESSAGES/mtsync.mo` are handled by CMake (`gettext_create_translations`), so deb/rpm/flatpak/snap packages all carry translations automatically
+- **CMake targets for translators**: `update-pot` (xgettext over `src/*.cpp` → `po/mtsync.pot`) and `update-po` (msgmerge into each language file); `gettext` was added to the documented build dependencies
+- **Localized desktop entry**: `data/com.mtsync.MtSync.desktop` gained `Name[fr]`/`Name[de]`/`Comment[fr]`/`Comment[de]` keys so the app's menu entry follows the system language
+- **CLI help translated**: `mtsync --help` output now goes through `_()`
+- **Untranslated by design**: D-Bus names, resource paths, provider brand names, rclone's own messages, internal log files, and JSON field names remain in English; the About tab's lyric quote is left as-is (creative content)
+- **GCC 15 note**: `std::format`'s `format_string` constructor is `consteval`, so runtime-translated format strings (e.g. `"Page {} of {}"`) go through `std::vformat` instead
+
 ## 0.9.17 — Revert Aggressive Stale Mount Cleanup
 
 - **Reverted the 0.9.16 stale-mount force-unmount**: the health check's `fusermount3 -u -z` call on mounts missing from `list_mounts` was too aggressive and unmounted FUSE mountpoints that were still in active use. The health check now only updates job bookkeeping again, as in 0.9.15, and no longer force-unmounts at the kernel level

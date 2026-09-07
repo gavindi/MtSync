@@ -75,8 +75,12 @@ sudo apt install \
   libgtkmm-4.0-dev \
   libadwaita-1-dev \
   libsoup-3.0-dev \
-  nlohmann-json3-dev
+  nlohmann-json3-dev \
+  gettext
 ```
+
+The `gettext` tools are required to compile the translation catalogs
+(`po/*.po` → `share/locale/<lang>/LC_MESSAGES/mtsync.mo`).
 
 ## Building
 

@@ -18,9 +18,12 @@
 
 #include "daemon.hpp"
 #include "application.hpp"
+#include "i18n.hpp"
+#include <glibmm/i18n.h>
 #include <iostream>
 
 int main(int argc, char* argv[]) {
+    mtsync::init_i18n();
     bool daemon_mode = false;
     bool force_show  = false;
 
@@ -31,10 +34,10 @@ int main(int argc, char* argv[]) {
         } else if (arg == "--show") {
             force_show = true;
         } else if (arg == "--help" || arg == "-h") {
-            std::cout << "Usage: mtsync [OPTIONS]\n"
-                      << "  --daemon, -d    Run as background daemon\n"
-                      << "  --show          Show the window even if 'start minimized' is enabled\n"
-                      << "  --help, -h      Show this help\n";
+            std::cout << _("Usage: mtsync [OPTIONS]\n")
+                      << _("  --daemon, -d    Run as background daemon\n")
+                      << _("  --show          Show the window even if 'start minimized' is enabled\n")
+                      << _("  --help, -h      Show this help\n");
             return 0;
         }
     }
