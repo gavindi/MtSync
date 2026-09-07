@@ -4,7 +4,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: MtSync 0.9.17\n"
+"Project-Id-Version: MtSync 0.9.18\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-07 10:45+1000\n"
 "PO-Revision-Date: 2026-09-07 10:31+1000\n"
