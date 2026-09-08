@@ -53,7 +53,8 @@ jobs:
             libadwaita-1-dev \
             libsoup-3.0-dev \
             libcairo2-dev \
-            nlohmann-json3-dev
+            nlohmann-json3-dev \
+            gettext
 
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
@@ -131,7 +132,8 @@ jobs:
             libsoup-3.0-dev \
             libcairo2-dev \
             nlohmann-json3-dev \
-            libfuse2
+            libfuse2 \
+            gettext
 
       - name: Configure and build
         run: |
