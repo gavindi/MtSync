@@ -1,5 +1,5 @@
 name: mtsync
-version: '0.9.18'
+version: '0.9.19'
 summary: Mount or sync cloud storage in comfort
 description: |
   Mount network storage in comfort. Mt. Sync is a GTK4/libadwaita

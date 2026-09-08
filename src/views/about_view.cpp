@@ -165,7 +165,7 @@ void AboutView::setup_ui() {
 
     auto* version_row = adw::action_row();
     adw::preferences_row_set_title(version_row, _("Version"));
-    adw::action_row_set_subtitle(version_row, "0.9.18");
+    adw::action_row_set_subtitle(version_row, "0.9.19");
     adw::preferences_group_add(info_group, version_row);
 
     auto* license_row = adw::action_row();

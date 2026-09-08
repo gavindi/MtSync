@@ -18,6 +18,7 @@
 
 #include "views/job_view.hpp"
 #include "views/job_edit_dialog.hpp"
+#include "views/log_view_dialog.hpp"
 #include "rclone/cron_utils.hpp"
 #include "widgets/adw_wrapper.hpp"
 #include <glibmm/i18n.h>
@@ -136,7 +137,7 @@ JobView::JobView(DaemonProxy* daemon_proxy)
     // Log section
     auto* log_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
 
-    auto* log_header = Gtk::make_managed<Gtk::Label>(_("Activity Log"));
+    auto* log_header = Gtk::make_managed<Gtk::Label>(_("Activity log (Double click for details)"));
     log_header->set_halign(Gtk::Align::START);
     log_header->add_css_class("caption");
     log_header->add_css_class("dim-label");
@@ -243,9 +244,9 @@ JobView::JobView(DaemonProxy* daemon_proxy)
 
         auto* btn = Gtk::make_managed<Gtk::Button>();
         btn->set_icon_name("document-open-symbolic");
-        btn->add_css_class("flat");
-        btn->set_visible(false);
         btn->set_valign(Gtk::Align::CENTER);
+        btn->set_margin_end(4);
+        btn->set_visible(false);
         btn->set_tooltip_text(_("Open the activity log file for this job in the default application"));
         // Single permanent handler; path stored as GObject data to survive cell recycling
         btn->signal_clicked().connect([btn]() {
@@ -272,6 +273,11 @@ JobView::JobView(DaemonProxy* daemon_proxy)
     auto contents_col = Gtk::ColumnViewColumn::create(_("Activity"), contents_factory);
     contents_col->set_expand(true);
     m_log_column_view->append_column(contents_col);
+
+    // Double-clicking a row shows its details (error log file contents when
+    // the entry references one)
+    m_log_column_view->signal_activate().connect(
+        sigc::mem_fun(*this, &JobView::on_log_row_activated));
 
     static bool log_css_installed = false;
     if (!log_css_installed) {
@@ -802,6 +808,17 @@ void JobView::refresh_log() {
     // Scroll to top (newest entry)
     auto vadj = m_log_scroll.get_vadjustment();
     if (vadj) vadj->set_value(0.0);
+}
+
+void JobView::on_log_row_activated(guint position) {
+    if (position >= m_log_store->get_n_items()) return;
+    auto entry = std::dynamic_pointer_cast<LogEntry>(m_log_store->get_object(position));
+    if (!entry) return;
+
+    auto* toplevel = dynamic_cast<Gtk::Window*>(get_root());
+    m_log_dialog = std::make_unique<LogViewDialog>(entry);
+    if (toplevel) m_log_dialog->set_transient_for(*toplevel);
+    m_log_dialog->present();
 }
 
 void JobView::on_daemon_message(const nlohmann::json& msg) {

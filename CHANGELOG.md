@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.19 — Double-Click Log Entry Inspection
+
+- **Double-click log entries to inspect details**: double-clicking any row in the Jobs tab's Activity Log now pops up a `LogViewDialog` — a modal window showing the entry's Time/State/Job ID/Type plus, for entries that reference an on-disk error log (`| log:` suffix in `mtsync.log`), the full contents of that file (`~/.local/state/mtsync/errors/<source>-<timestamp>.log`) in a read-only monospace text view, with an "Open in default app" button alongside Close; entries without a referenced file (e.g. `STARTED`/`COMPLETED`) show the entry's own text instead. Wired via the log `ColumnView`'s `activate` signal (double-click), the same activation path `BrowserPane` already uses. The existing per-row `document-open` button on failed entries was made more visible (framed instead of flat) and retained alongside the new dialog
+
 ## 0.9.18 — Internationalisation (GNU gettext)
 
 - **Multi-language support via GNU gettext**: the entire user-facing UI is now translatable. Strings are wrapped in `_()` (`<glibmm/i18n.h>`) across all 13 UI files; plurals use `ngettext()` (file/folder counts in the Browse status bar, Compare dialog pagination, and job progress stats) and job statuses (`success`, `error`, `stopped`, `running`) are stored in English and translated only at display time via `translate_status()` in `job_view.cpp`. Runtime locale initialisation (`setlocale` + `bindtextdomain`/`bind_textdomain_codeset`/`textdomain`, domain `mtsync`) lives in a new `src/i18n.hpp` and is called from `main.cpp` so both the GUI and the `--daemon` process (notifications, tray tooltip) pick up the desktop language — no language picker needed

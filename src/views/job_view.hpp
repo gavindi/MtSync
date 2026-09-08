@@ -30,6 +30,7 @@
 namespace mtsync {
 
 class JobEditDialog;
+class LogViewDialog;
 
 class JobView : public Gtk::Box {
 public:
@@ -72,6 +73,7 @@ private:
     std::vector<JobUI> m_ui_rows;
 
     std::unique_ptr<JobEditDialog> m_edit_dialog;
+    std::unique_ptr<LogViewDialog> m_log_dialog;
 
     Gtk::Widget* group_for_type(rclone::JobType t);
     void update_group_visibility();
@@ -86,6 +88,7 @@ private:
     void on_stop_job(size_t index);
     void on_delete_job(size_t index);
     void refresh_log();
+    void on_log_row_activated(guint position);
     std::string format_speed(double bytes_per_sec);
     void on_daemon_message(const nlohmann::json& msg);
 };

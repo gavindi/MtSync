@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: MtSync 0.9.18\n"
+"Project-Id-Version: MtSync 0.9.19\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-07 10:45+1000\n"
+"POT-Creation-Date: 2026-09-09 07:03+1000\n"
 "PO-Revision-Date: 2026-09-07 10:31+1000\n"
 "Last-Translator: Mt. Sync contributors <noreply@github.com>\n"
 "Language-Team: German <https://github.com/gavindi/MtSync>\n"
@@ -251,7 +251,7 @@ msgstr "Remote bearbeiten"
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:75
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:127
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:117
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:118
 msgid "Copy"
 msgstr "Kopieren"
 
@@ -265,7 +265,7 @@ msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:83
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:128
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:119
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:120
 msgid "Move"
 msgstr "Verschieben"
 
@@ -279,7 +279,7 @@ msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:91
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:126
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:115
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:116
 msgid "Sync"
 msgstr "Synchronisieren"
 
@@ -294,7 +294,7 @@ msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:99
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:129
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:121
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:122
 msgid "Mount"
 msgstr "Mounten"
 
@@ -481,8 +481,8 @@ msgid "Modified"
 msgstr "Geändert"
 
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:557
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:703
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:729
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:709
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:735
 msgid "Error: "
 msgstr "Fehler: "
 
@@ -540,7 +540,8 @@ msgid "Job Configuration"
 msgstr "Auftragskonfiguration"
 
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:131
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:228
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:229
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:62
 msgid "Type"
 msgstr "Typ"
 
@@ -822,76 +823,80 @@ msgstr ""
 msgid "Discard any unsaved changes and close this dialog"
 msgstr "Alle ungespeicherten Änderungen verwerfen und diesen Dialog schließen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:61
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:62
 msgid "success"
 msgstr "erfolgreich"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:62
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:63
 msgid "error"
 msgstr "fehlgeschlagen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:63
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:64
 msgid "stopped"
 msgstr "gestoppt"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:64
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:65
 msgid "running"
 msgstr "läuft"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:104
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:105
 #: /home/ggraham/Projects/MtSync/src/window.cpp:58
 msgid "Jobs"
 msgstr "Aufträge"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:109
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:110
 msgid "Add a new sync, copy, move, or mount job"
 msgstr "Neuen Sync-, Kopier-, Verschiebe- oder Mount-Auftrag hinzufügen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:139
-msgid "Activity Log"
-msgstr "Aktivitätsprotokoll"
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:140
+msgid "Activity log (Double click for details)"
+msgstr "Aktivitätsprotokoll (Doppelklick für Details)"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:168
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:169
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:59
 msgid "Time"
 msgstr "Zeit"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:194
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:195
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:60
 msgid "State"
 msgstr "Status"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:212
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:213
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:61
 msgid "Job ID"
 msgstr "Auftrags-ID"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:249
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:250
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:126
 msgid "Open the activity log file for this job in the default application"
 msgstr ""
-"Die Aktivitätsprotokolldatei für diesen Auftrag in der Standardanwendung "
-"öffnen"
+"Aktivitätsprotokolldatei für diesen Auftrag in der Standard-App öffnenDie "
+"Aktivitätsprotokolldatei für diesen Auftrag in der Standardanwendung öffnen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:272
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:273
 msgid "Activity"
 msgstr "Aktivität"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:456
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:462
 msgid "Run this job immediately"
 msgstr "Diesen Auftrag sofort ausführen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:465
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:471
 msgid "Stop this job while it is running"
 msgstr "Diesen Auftrag während der Ausführung stoppen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:472
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:478
 msgid "Edit this job's configuration, schedule, and advanced settings"
 msgstr ""
 "Konfiguration, Zeitplan und erweiterte Einstellungen dieses Auftrags "
 "bearbeiten"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:480
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:486
 msgid "Permanently delete this job from the list"
 msgstr "Diesen Auftrag dauerhaft aus der Liste löschen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:488
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:494
 msgid ""
 "Show or hide this job's details, including source path, destination path, "
 "and UUID"
@@ -899,57 +904,73 @@ msgstr ""
 "Details dieses Auftrags ein- oder ausblenden, einschließlich Quellpfad, "
 "Zielpfad und UUID"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:543
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:549
 msgid "Last run: "
 msgstr "Zuletzt ausgeführt: "
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:568
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:579
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:710
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:574
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:585
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:716
 msgid "Mounted"
 msgstr "Gemountet"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:574
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:710
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:580
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:716
 msgid "Running..."
 msgstr "Läuft…"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:681
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:860
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:687
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:877
 msgid "Starting..."
 msgstr "Starte…"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:693
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:720
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:699
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:726
 msgid "Error: not connected to daemon"
 msgstr "Fehler: nicht mit Daemon verbunden"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:731
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:942
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:737
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:959
 msgid "Stopped"
 msgstr "Gestoppt"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:877
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:894
 msgid "file"
 msgid_plural "files"
 msgstr[0] "Datei"
 msgstr[1] "Dateien"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:881
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:898
 msgid "ETA"
 msgstr "ETA"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:899
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:916
 msgid "Last run: success"
 msgstr "Zuletzt ausgeführt: erfolgreich"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:912
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:929
 msgid "Last run: error"
 msgstr "Zuletzt ausgeführt: fehlgeschlagen"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:942
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:959
 msgid "Unmounted"
 msgstr "Ausgehängt"
+
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:34
+msgid "Log Entry"
+msgstr "Protokolleintrag"
+
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:101
+msgid "Could not read log file: "
+msgstr "Protokolldatei konnte nicht gelesen werden: "
+
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:124
+msgid "Open in default app"
+msgstr "In Standard-App öffnen"
+
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:134
+msgid "Close"
+msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:97
 msgid "Notifications"
@@ -1272,3 +1293,6 @@ msgstr "Einstellungen"
 #: /home/ggraham/Projects/MtSync/src/window.cpp:70
 msgid "About"
 msgstr "Über"
+
+#~ msgid "Activity Log"
+#~ msgstr "Aktivitätsprotokoll"
