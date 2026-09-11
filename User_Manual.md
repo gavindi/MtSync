@@ -177,6 +177,8 @@ Selecting a preset fills all fields instantly. Editing any field automatically s
 - Your system timezone
 - A scrollable list of the next 15 upcoming execution times
 
+**Watch for Changes** — below the cron editor, a separate toggle lets this job run automatically shortly after files change in its **Source** folder, instead of (or alongside) the cron schedule above. See [6. Watch Mode](#6-watch-mode-react-to-file-changes) for details. This toggle is hidden for Mount jobs and disabled if **Source** is a remote location rather than a local folder.
+
 ### Advanced Tab
 
 | Field | Description |
@@ -212,7 +214,28 @@ Scheduled jobs skip execution if the previous run is still in progress.
 
 ---
 
-## 6. Running & Monitoring Jobs (Jobs Tab)
+## 6. Watch Mode (React to File Changes)
+
+Watch Mode runs a job automatically shortly after files change, instead of waiting for a cron schedule or a manual **Run**. It's useful for keeping a destination close to up to date without picking an arbitrary polling interval.
+
+1. Open the job dialog (add new or edit existing) for a **Sync**, **Copy**, or **Move** job whose **Source** is a local folder
+2. Switch to the **Schedule** tab
+3. Toggle **Watch for Changes** on
+
+Watch Mode and the cron schedule are independent — you can enable either, both, or neither. A common pattern is to enable Watch Mode for fast reaction to local edits and keep a loose cron schedule as a periodic safety net.
+
+**How it decides when to actually run:** rather than syncing on every single file change (which would mean dozens of runs during a large copy or delete), Mt. Sync waits for a short quiet period after the last detected change before starting the job — by default 2 seconds. If changes keep happening continuously (e.g. a large batch of files being deleted or moved), Mt. Sync won't wait forever: it guarantees a sync still runs at least every 30 seconds by default, even if activity hasn't settled down. Both the quiet period and the maximum wait can be tuned in **Settings → Transfers** (see [8. Settings](#8-settings)).
+
+**Limitations:**
+- **Watch for Changes** is not available for **Mount** jobs, or when **Source** is a remote location (`remotename:path`) rather than a local folder — only local filesystem changes can be detected this way
+- For a **Bi-directional** (bisync) job, Watch Mode only reacts to changes on the local **Source** side; changes made on the remote side are still only picked up by a cron schedule or a manual run
+- If a bi-directional sync job does **not** have **Force Deletes** enabled, deleting even a single file will cause the sync to abort with a "too many deletes" error — and since Watch Mode retries automatically, every subsequent triggered run will keep failing with the same error until you either restore the file, delete it from the other side too, or enable **Force Deletes** on the job
+
+The **Activity Log** (see [7. Running & Monitoring Jobs](#7-running--monitoring-jobs-jobs-tab)) marks a run started by Watch Mode with `(triggered by file watch)` so you can tell it apart from a scheduled or manual run.
+
+---
+
+## 7. Running & Monitoring Jobs (Jobs Tab)
 
 The Jobs tab lists all your saved jobs. Each row shows:
 
@@ -231,11 +254,11 @@ Click the **chevron** button on any row to expand it and see the full source/des
 
 ### Activity Log
 
-Below the job list, the Activity Log records every job execution with a timestamp, result (STARTED, COMPLETED, SKIPPED, RETRYING), job type, and a details message. The most recent 100 entries are shown.
+Below the job list, the Activity Log records every job execution with a timestamp, result (STARTED, COMPLETED, SKIPPED, RETRYING), job type, and a details message. The most recent 100 entries are shown. A run started by [Watch Mode](#6-watch-mode-react-to-file-changes) is marked `(triggered by file watch)` in its STARTED entry.
 
 ---
 
-## 7. Settings
+## 8. Settings
 
 Open the **Settings** tab to configure application-wide behaviour.
 
@@ -265,6 +288,8 @@ These are the defaults applied to all new jobs. Individual jobs can override the
 | **Verify checksums** | Enable checksum verification by default for all jobs |
 | **Parallel transfers** | Default number of files to transfer simultaneously |
 | **Retries on failure** | Default number of retry attempts for failed files |
+| **Watch mode debounce (ms)** | Default quiet period after the last detected file change before a [Watch Mode](#6-watch-mode-react-to-file-changes) job runs |
+| **Watch mode max wait (ms)** | Default upper bound on how long continuous file activity can postpone a Watch Mode run |
 
 ### rclone
 
@@ -275,6 +300,6 @@ These are the defaults applied to all new jobs. Individual jobs can override the
 
 ---
 
-## 8. System Tray
+## 9. System Tray
 
 When Mt. Sync is running, an icon appears in your system tray. Right-click it for **Open** (show the main window) and **Quit** (exit the application and optionally stop the daemon). An animated spinner overlays the tray icon while any job is actively transferring.

@@ -21,6 +21,7 @@
 #include "ipc/protocol.hpp"
 #include "settings.hpp"
 #include <glibmm/i18n.h>
+#include <algorithm>
 #include <format>
 #include <iostream>
 #include <unordered_set>
@@ -172,6 +173,7 @@ MtSyncDaemon::MtSyncDaemon() {
                 m_job_state.resize(m_jobs.size());
                 save_jobs();
                 schedule_all_jobs();
+                setup_all_watches();
                 json response_payload = {{"index", m_jobs.size() - 1}, {"job", m_jobs.back()}};
                 m_ipc_server->send_to_all(make_response(ipc::ResponseType::JobAdded, response_payload, msg));
 
@@ -181,6 +183,7 @@ MtSyncDaemon::MtSyncDaemon() {
                     m_jobs[index] = payload.value("job", rclone::Job{});
                     save_jobs();
                     schedule_all_jobs();
+                    setup_all_watches();
                     json response_payload = {{"index", index}, {"job", m_jobs[index]}};
                     m_ipc_server->send_to_all(make_response(ipc::ResponseType::JobUpdated, response_payload, msg));
                 }
@@ -201,10 +204,13 @@ MtSyncDaemon::MtSyncDaemon() {
                         m_job_state[index].sched_timer.disconnect();
                         m_job_state[index].poll_timer.disconnect();
                         m_job_state[index].retry_timer.disconnect();
+                        m_job_state[index].watch_debounce_timer.disconnect();
+                        m_job_state[index].watcher.reset();
                         m_job_state.erase(m_job_state.begin() + index);
                     }
                     m_jobs.erase(m_jobs.begin() + index);
                     save_jobs();
+                    setup_all_watches();
                     json response_payload = {{"index", index}};
                     m_ipc_server->send_to_all(make_response(ipc::ResponseType::JobDeleted, response_payload, msg));
                 }
@@ -323,6 +329,7 @@ MtSyncDaemon::MtSyncDaemon() {
     });
 
     schedule_all_jobs();
+    setup_all_watches();
 
     // Periodically verify mount liveness via rclone RC (every 60s).
     // Detects mounts that silently died (network loss, rclone crash)
@@ -372,6 +379,8 @@ void MtSyncDaemon::stop() {
         s.poll_timer.disconnect();
         s.sched_timer.disconnect();
         s.retry_timer.disconnect();
+        s.watch_debounce_timer.disconnect();
+        s.watcher.reset();
     }
     m_mount_health_timer.disconnect();
     m_job_state.clear();
@@ -502,7 +511,7 @@ void MtSyncDaemon::schedule_job(size_t index) {
         }, delay_ms);
 }
 
-void MtSyncDaemon::on_run_job(size_t index) {
+void MtSyncDaemon::on_run_job(size_t index, const std::string& trigger) {
     if (index >= m_jobs.size()) return;
     auto& job = m_jobs[index];
 
@@ -532,8 +541,9 @@ void MtSyncDaemon::on_run_job(size_t index) {
     }
     save_jobs();
 
-    append_log(std::format("STARTED   {} [{}] {} -> {}",
-        job.id, type_str(job.type), job.source, job.destination));
+    append_log(std::format("STARTED   {} [{}] {} -> {}{}",
+        job.id, type_str(job.type), job.source, job.destination,
+        trigger == "watch" ? " (triggered by file watch)" : ""));
 
     auto settings = load_settings();
     if (settings.notify_on_start)
@@ -932,6 +942,12 @@ void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::strin
         if (job.schedule_enabled) {
             schedule_job(index);
         }
+        // A watch-triggered run may have been skipped (on_run_job's in-flight
+        // guard) while this run was still going, or new changes may have
+        // arrived during the run — re-check now that the job is free again.
+        if (m_job_state[index].watch_pending) {
+            on_watch_changed(index);
+        }
     }
 
     m_running_job_count--;
@@ -951,6 +967,80 @@ void MtSyncDaemon::update_tray_animation() {
         m_tray->start_animation();
     else
         m_tray->stop_animation();
+}
+
+void MtSyncDaemon::setup_all_watches() {
+    for (size_t i = 0; i < m_job_state.size(); ++i) teardown_watch(i);
+    for (size_t i = 0; i < m_jobs.size(); ++i) {
+        if (m_jobs[i].watch_enabled) setup_watch(i);
+    }
+}
+
+void MtSyncDaemon::teardown_watch(size_t index) {
+    if (index >= m_job_state.size()) return;
+    m_job_state[index].watch_debounce_timer.disconnect();
+    m_job_state[index].watcher.reset();
+    m_job_state[index].watch_pending = false;
+}
+
+void MtSyncDaemon::setup_watch(size_t index) {
+    if (index >= m_jobs.size()) return;
+    if (index >= m_job_state.size()) m_job_state.resize(index + 1);
+    auto& job = m_jobs[index];
+    if (job.type == rclone::JobType::Mount) return;      // no "sync" semantics
+    if (!watch::is_local_path(job.source)) return;        // nothing local to watch
+
+    std::string job_uuid = job.id;
+    m_job_state[index].watcher = std::make_unique<watch::DirectoryWatcher>(
+        job.source,
+        [this, index, job_uuid]() {
+            if (index >= m_jobs.size() || m_jobs[index].id != job_uuid) return;
+            on_watch_changed(index);
+        },
+        [this, index, job_uuid](const std::string& msg) {
+            if (index >= m_jobs.size() || m_jobs[index].id != job_uuid) return;
+            append_log(std::format("FAILED    {} [{}] watch setup: {}",
+                m_jobs[index].id, type_str(m_jobs[index].type), msg));
+            auto settings = load_settings();
+            if (settings.notify_on_errors)
+                send_notification(_("Watch Setup Failed"), m_jobs[index].source + ": " + msg);
+        });
+}
+
+void MtSyncDaemon::on_watch_changed(size_t index) {
+    if (index >= m_jobs.size() || index >= m_job_state.size()) return;
+    auto& job = m_jobs[index];
+    auto& st  = m_job_state[index];
+    auto settings = load_settings();
+
+    int64_t now = g_get_monotonic_time() / 1000;
+    if (!st.watch_pending) {
+        st.watch_pending = true;
+        st.watch_burst_start_ms = now;
+    }
+
+    int debounce_ms = job.watch_debounce_ms > 0 ? job.watch_debounce_ms : settings.watch_debounce_ms;
+    int max_wait_ms  = job.watch_max_wait_ms  > 0 ? job.watch_max_wait_ms  : settings.watch_max_wait_ms;
+
+    int64_t elapsed   = now - st.watch_burst_start_ms;
+    int64_t remaining = static_cast<int64_t>(max_wait_ms) - elapsed;
+    int64_t fire_in_ms = std::clamp<int64_t>(std::min<int64_t>(debounce_ms, remaining), 0, debounce_ms);
+
+    std::string job_uuid = job.id;
+    st.watch_debounce_timer.disconnect();
+    st.watch_debounce_timer = Glib::signal_timeout().connect(
+        [this, index, job_uuid]() -> bool {
+            if (index >= m_jobs.size() || m_jobs[index].id != job_uuid) return false;
+            fire_watch_triggered_run(index);
+            return false; // one-shot
+        }, static_cast<unsigned int>(fire_in_ms));
+}
+
+void MtSyncDaemon::fire_watch_triggered_run(size_t index) {
+    if (index >= m_jobs.size() || index >= m_job_state.size()) return;
+    m_job_state[index].watch_pending = false;
+    m_job_state[index].watch_debounce_timer.disconnect();
+    on_run_job(index, "watch");
 }
 
 } // namespace mtsync

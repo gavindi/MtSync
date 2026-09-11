@@ -43,6 +43,8 @@ SettingsView::~SettingsView() {
     g_signal_handler_disconnect(m_checksums_row->gobj(),        m_sig_checksums);
     g_signal_handler_disconnect(m_transfers_row->gobj(),        m_sig_transfers);
     g_signal_handler_disconnect(m_retries_row->gobj(),          m_sig_retries);
+    g_signal_handler_disconnect(m_watch_debounce_row->gobj(),   m_sig_watch_debounce);
+    g_signal_handler_disconnect(m_watch_max_wait_row->gobj(),   m_sig_watch_max_wait);
     g_signal_handler_disconnect(m_rclone_path_row->gobj(),      m_sig_rclone_path);
     g_signal_handler_disconnect(m_global_flags_row->gobj(),     m_sig_global_flags);
     g_signal_handler_disconnect(m_notify_start_row->gobj(),     m_sig_notify_start);
@@ -167,6 +169,20 @@ void SettingsView::setup_ui() {
         std::format("{}", m_settings.retries).c_str());
     adw::preferences_group_add(transfers_group, m_retries_row);
 
+    m_watch_debounce_row = adw::entry_row();
+    adw::preferences_row_set_title(m_watch_debounce_row, _("Watch mode debounce (ms)"));
+    m_watch_debounce_row->set_tooltip_text(_("How long to wait after the last detected file change before syncing a job with \"Watch for Changes\" enabled — default per job unless overridden"));
+    adw::entry_row_set_text(m_watch_debounce_row,
+        std::format("{}", m_settings.watch_debounce_ms).c_str());
+    adw::preferences_group_add(transfers_group, m_watch_debounce_row);
+
+    m_watch_max_wait_row = adw::entry_row();
+    adw::preferences_row_set_title(m_watch_max_wait_row, _("Watch mode max wait (ms)"));
+    m_watch_max_wait_row->set_tooltip_text(_("Upper bound on how long a burst of file changes can keep postponing a watch-triggered sync — guarantees a sync still runs periodically during a sustained storm of changes"));
+    adw::entry_row_set_text(m_watch_max_wait_row,
+        std::format("{}", m_settings.watch_max_wait_ms).c_str());
+    adw::preferences_group_add(transfers_group, m_watch_max_wait_row);
+
     // ── rclone ────────────────────────────────────────────────────────────────
     auto* rclone_group = adw::preferences_group();
     adw::preferences_group_set_title(rclone_group, "rclone");
@@ -259,6 +275,26 @@ void SettingsView::setup_ui() {
             try {
                 int v = std::stoi(adw::entry_row_get_text(self->m_retries_row));
                 if (v >= 0) self->m_settings.retries = v;
+            } catch (...) {}
+            self->save();
+        }), this);
+
+    m_sig_watch_debounce = g_signal_connect(m_watch_debounce_row->gobj(), "changed",
+        G_CALLBACK(+[](GtkEditable*, gpointer data) {
+            auto* self = static_cast<SettingsView*>(data);
+            try {
+                int v = std::stoi(adw::entry_row_get_text(self->m_watch_debounce_row));
+                if (v > 0) self->m_settings.watch_debounce_ms = v;
+            } catch (...) {}
+            self->save();
+        }), this);
+
+    m_sig_watch_max_wait = g_signal_connect(m_watch_max_wait_row->gobj(), "changed",
+        G_CALLBACK(+[](GtkEditable*, gpointer data) {
+            auto* self = static_cast<SettingsView*>(data);
+            try {
+                int v = std::stoi(adw::entry_row_get_text(self->m_watch_max_wait_row));
+                if (v > 0) self->m_settings.watch_max_wait_ms = v;
             } catch (...) {}
             self->save();
         }), this);

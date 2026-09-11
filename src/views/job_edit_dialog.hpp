@@ -65,6 +65,9 @@ private:
     // Schedule tab — enable toggle
     Gtk::Widget* m_schedule_switch = nullptr;
 
+    // Schedule tab — watch-for-changes toggle
+    Gtk::Widget* m_watch_switch = nullptr;
+
     // Schedule tab — cron editor inputs
     Gtk::Widget*      m_preset_combo     = nullptr;
     Gtk::Widget*      m_minute_entry     = nullptr;

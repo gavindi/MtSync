@@ -33,8 +33,8 @@ desktop application backed by a persistent daemon.
   when any column sort is active; five filter toggles (`←` `→` `=` `≠` `!`) in the action bar
   show rows by status (all on by default; deactivate to hide that category) — directory headers
   with no visible children are suppressed automatically
-- **Jobs system** — Define Sync, Copy, Move, and Mount jobs; run them on demand or on a cron
-  schedule; real-time progress with transfer stats (files, speed, ETA); jobs persist across GUI
+- **Jobs system** — Define Sync, Copy, Move, and Mount jobs; run them on demand, on a cron
+  schedule, or reactively via watch mode; real-time progress with transfer stats (files, speed, ETA); jobs persist across GUI
   restarts; each job row shows a type icon, a `SourceDir → DestDir` display name, and a footer
   with the job UUID and last status; the add/edit dialog is split into three tabs — **Job**
   (type, source, destination, filters, dry run, bi-directional sync, checksum, mount options),
@@ -42,19 +42,30 @@ desktop application backed by a persistent daemon.
   Custom; text entries for Minute, Hour, and Day of Month each with a clear-to-`*` button;
   Day of Week checkbox row Sun–Sat; Month checkbox grid Jan–Dec; live preview panel showing the
   raw cron expression, a human-readable description, a calendar with run days marked for the
-  current month, and a scrollable list of the next 15 upcoming execution times), and **Advanced**
+  current month, and a scrollable list of the next 15 upcoming execution times; a separate
+  **Watch for Changes** toggle triggers the job shortly after files change under a local
+  `source` — hidden for Mount jobs and disabled when `source` is an rclone remote, coexists
+  with the cron schedule, and is debounced against event storms with a configurable quiet
+  period and maximum wait, both overridable per job with `-1` falling back to the Settings
+  defaults), and **Advanced**
   (bandwidth limit, parallel transfers, retries on failure, extra rclone flags appended to the RC
   call at run time — supports `--flag value`, `--flag=value`, and boolean `--flag` forms); Sync jobs support bi-directional sync
   mode (rclone bisync), copy empty directories, and file include-pattern filters; Mount jobs show
   active state and can be stopped/unmounted; checksum verification disabled by default; Save button
-  to store job without running; scheduled jobs skip execution if the previous instance is still
-  running; failed jobs are automatically retried up to a configurable count with exponential backoff
+  to store job without running; scheduled and watch-triggered runs both skip execution if the
+  previous instance is still running (a watch trigger that is skipped this way is retried once
+  that instance finishes); failed jobs are automatically retried up to a configurable count with exponential backoff
   (2 s, 4 s, 8 s, … capped at 60 s) before being marked as failed; activity log panel shows the last 100 entries in a structured column view (Time, State,
-  Job ID, Type, Contents) with colour-coded state labels, newest first
+  Job ID, Type, Contents) with colour-coded state labels, newest first — watch-triggered entries
+  are annotated `(triggered by file watch)`
 - **Background daemon** — `mtsync --daemon` keeps jobs running when the GUI is closed; GUI
   reconnects automatically on next launch; daemon starts rclone RC on startup; periodic mount
   liveness checks detect and mark stale FUSE mounts; HTTP request timeouts and poll-rate
-  guards prevent resource exhaustion during network outages
+  guards prevent resource exhaustion during network outages; recursively watches each
+  watch-enabled job's local source directory tree via `Gio::FileMonitor` (inotify), adding and
+  removing per-directory monitors as subdirectories are created and deleted, with a symlink-loop
+  guard and a recursion depth cap; watches are rebuilt from `jobs.json` on every daemon start and
+  whenever a job is added, updated, or deleted
 - **System tray icon** — StatusNotifierItem tray icon with Open/Quit menu; Open re-launches the
   GUI if it is not running; animated spinner shown while any job is active; custom Mt. Sync-branded
   idle icon rendered via Cairo and bundled as a GLib resource
@@ -204,6 +215,8 @@ MtSyncApplication (Gtk::Application)
 MtSyncDaemon (background process, mtsync --daemon)
  ├── IpcServer             — Unix socket at ~/.cache/mtsync/socket
  ├── TrayIcon              — StatusNotifierItem + dbusmenu via D-Bus
+ ├── DirectoryWatcher (× one per watch-enabled job) — recursive Gio::FileMonitor tree,
+ │                            debounced with a max-wait cap before triggering a run
  └── RcloneManager
       ├── RcloneCli         — Gio::Subprocess for one-shot commands
       └── RcloneRc          — libsoup HTTP to rclone RC daemon

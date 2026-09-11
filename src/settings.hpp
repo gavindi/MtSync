@@ -36,6 +36,8 @@ struct Settings {
     bool        verify_checksums      = false;
     int         parallel_transfers    = 4;
     int         retries               = 0;
+    int         watch_debounce_ms     = 2000;  // quiet period after last FS event before syncing
+    int         watch_max_wait_ms     = 30000; // hard cap: force a run even under continuous storms
     // rclone
     std::string rclone_path           = "";
     std::string global_rclone_flags   = "";
@@ -50,6 +52,7 @@ struct Settings {
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Settings,
     start_daemon_on_login, start_minimized, shutdown_daemon_on_close,
     default_bandwidth, verify_checksums, parallel_transfers, retries,
+    watch_debounce_ms, watch_max_wait_ms,
     rclone_path, global_rclone_flags,
     notify_on_start, notify_on_completion, notify_on_errors,
     show_welcome_on_startup)

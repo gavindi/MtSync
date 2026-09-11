@@ -19,6 +19,7 @@
 #include "views/job_edit_dialog.hpp"
 #include "rclone/cron_utils.hpp"
 #include "settings.hpp"
+#include "watch/directory_watcher.hpp"
 #include "widgets/adw_wrapper.hpp"
 #include <adwaita.h>
 #include <format>
@@ -254,6 +255,25 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     bool sched_on = m_editing && m_editing->schedule_enabled;
     adw::switch_row_set_active(m_schedule_switch, sched_on);
     adw::preferences_group_add(sched_enable_group, m_schedule_switch);
+
+    // Watch for Changes switch — an independent trigger alongside the cron
+    // schedule above; both can be enabled at once (watch mode reacts quickly
+    // to local edits, the schedule remains useful as a periodic catch-all,
+    // e.g. for bisync's remote side which can't be watched locally).
+    auto* watch_group = adw::preferences_group();
+    watch_group->set_margin_top(8);
+    watch_group->set_margin_bottom(8);
+    watch_group->set_margin_start(16);
+    watch_group->set_margin_end(16);
+    sched_outer->append(*watch_group);
+
+    m_watch_switch = adw::switch_row();
+    adw::preferences_row_set_title(m_watch_switch, _("Watch for Changes"));
+    m_watch_switch->set_tooltip_text(_("Automatically run this job shortly after files change in the source directory, in addition to (or instead of) the schedule above. Requires a local source directory."));
+    if (m_editing) adw::switch_row_set_active(m_watch_switch, m_editing->watch_enabled);
+    m_watch_switch->set_visible(initial_type != rclone::JobType::Mount);
+    m_watch_switch->set_sensitive(watch::is_local_path(adw::entry_row_get_text(m_source_entry)));
+    adw::preferences_group_add(watch_group, m_watch_switch);
 
     // Two-column layout
     auto* sched_columns = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
@@ -552,7 +572,19 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
             self->m_includes_entry->set_visible(sel != 3);            // Not for Mount
             self->m_dry_run_switch->set_visible(sel != 3);            // Not for Mount
             self->m_enable_checksum_switch->set_visible(sel != 3);    // Not for Mount
+            self->m_watch_switch->set_visible(sel != 3);              // Not for Mount
             self->set_default_size(460, 1);
+        }), this);
+
+    // Source entry → watch mode only makes sense for a local source directory
+    g_signal_connect(m_source_entry->gobj(), "changed",
+        G_CALLBACK(+[](GtkEditable*, gpointer data) {
+            auto* self = static_cast<JobEditDialog*>(data);
+            bool local = watch::is_local_path(adw::entry_row_get_text(self->m_source_entry));
+            self->m_watch_switch->set_sensitive(local);
+            self->m_watch_switch->set_tooltip_text(local
+                ? _("Automatically run this job shortly after files change in the source directory, in addition to (or instead of) the schedule above. Requires a local source directory.")
+                : _("Watch mode requires a local source directory"));
         }), this);
 
     // Bi-directional sync switch → show/hide dependent Force Deletes row
@@ -755,6 +787,9 @@ rclone::Job JobEditDialog::build_job() const {
         job.cron_month   = cron.cron_month;
         job.cron_weekday = cron.cron_weekday;
     }
+    job.watch_enabled = m_watch_switch->get_visible()
+                     && m_watch_switch->get_sensitive()
+                     && adw::switch_row_get_active(m_watch_switch);
     job.mount_at_startup = m_mount_startup_switch->get_visible()
                         && adw::switch_row_get_active(m_mount_startup_switch);
     if (m_cache_mode_row->get_visible()) {

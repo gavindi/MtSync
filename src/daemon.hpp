@@ -23,8 +23,10 @@
 #include "notification.hpp"
 #include "ipc/server.hpp"
 #include "ipc/protocol.hpp"
+#include "watch/directory_watcher.hpp"
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <sigc++/sigc++.h>
 
@@ -46,9 +48,15 @@ private:
     void save_jobs();
     void schedule_all_jobs();
     void schedule_job(size_t index);
-    void on_run_job(size_t index);
+    void on_run_job(size_t index, const std::string& trigger = "");
     void on_job_completed(size_t index, bool success, const std::string& error_msg = "",
                            const std::string& output_log = "");
+
+    void setup_all_watches();
+    void setup_watch(size_t index);
+    void teardown_watch(size_t index);
+    void on_watch_changed(size_t index);
+    void fire_watch_triggered_run(size_t index);
 
     struct JobState {
         sigc::connection  poll_timer;
@@ -62,6 +70,12 @@ private:
         bool              bisync_force_resync   = false; // consumed once by on_run_job to add resync:true
         bool              bisync_resync_retried = false; // single-shot guard against retry loops
         rclone::SyncStats last_stats;
+
+        // Watch mode (inotify/Gio::FileMonitor-triggered runs)
+        std::unique_ptr<watch::DirectoryWatcher> watcher; // null if watch inactive for this job
+        sigc::connection watch_debounce_timer;
+        int64_t          watch_burst_start_ms = 0; // monotonic ms when the current pending burst began
+        bool             watch_pending        = false;
     };
 
     rclone::RcloneManager m_manager;

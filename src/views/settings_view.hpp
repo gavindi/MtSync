@@ -40,6 +40,8 @@ private:
     Gtk::Widget* m_checksums_row   = nullptr;
     Gtk::Widget* m_transfers_row   = nullptr;
     Gtk::Widget* m_retries_row     = nullptr;
+    Gtk::Widget* m_watch_debounce_row = nullptr;
+    Gtk::Widget* m_watch_max_wait_row = nullptr;
     // rclone
     Gtk::Widget* m_rclone_path_row       = nullptr;
     Gtk::Widget* m_global_flags_row      = nullptr;
@@ -56,6 +58,8 @@ private:
     gulong m_sig_checksums        = 0;
     gulong m_sig_transfers        = 0;
     gulong m_sig_retries          = 0;
+    gulong m_sig_watch_debounce   = 0;
+    gulong m_sig_watch_max_wait   = 0;
     gulong m_sig_rclone_path      = 0;
     gulong m_sig_global_flags     = 0;
     gulong m_sig_notify_start     = 0;

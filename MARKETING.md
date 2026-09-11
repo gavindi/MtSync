@@ -48,6 +48,11 @@ Copy or move selected files between any two locations — local or remote, same 
 ### Scheduled Jobs
 Set any job to run on a cron schedule. The built-in schedule editor takes five familiar fields (minute, hour, day, month, weekday) and shows a plain-English summary of when the job will next run. Jobs re-arm automatically after each completion. If a scheduled instance is still running when the next trigger fires, it is skipped safely — no pile-ups.
 
+### Watch Mode — Sync the Moment Something Changes
+Why wait for the next scheduled run? Flip on **Watch for Changes** for any Sync, Copy, Move, or bi-directional sync job pointed at a local folder, and Mt. Sync keeps an eye on it for you — save a file, drop in a batch of photos, let another app write there, and your sync kicks off automatically within seconds, no cron schedule required.
+
+It's smart about it, too: a flood of activity — a big delete, an entire folder dropped in at once — is gathered into a single sync instead of firing off dozens back-to-back, and a built-in safety valve guarantees a sync still happens even if the changes keep coming. Watch mode and scheduled runs work side by side, so a job can react instantly to local changes while a schedule still handles the rest.
+
 ---
 
 ## A Daemon That Never Sleeps
@@ -80,6 +85,7 @@ State labels are colour-coded at a glance. The log shows the last 100 entries ne
 
 - **Automatic retries** — Failed jobs retry up to a configurable number of times before being marked as failed. Each attempt is recorded in the activity log.
 - **Concurrent job protection** — A scheduled job won't start a new instance if the previous one is still running.
+- **Storm-safe watch mode** — A flood of file changes (a bulk delete, a folder full of new files) is batched into a single sync instead of triggering a run per change, with a guaranteed maximum wait so changes never pile up unsynced.
 - **Per-job overrides** — Parallel transfers, bandwidth limits, and retry counts can be overridden per job, with global Settings values as the default.
 - **Dry run by default** — New jobs default to dry-run mode so you can confirm what will happen before committing.
 
@@ -103,7 +109,7 @@ Everything persists automatically to `~/.config/mtsync/settings.json`. No Apply 
 
 - **Start Up & Shut Down** — launch the daemon at login, start minimised to tray, shut down daemon when closing the window
 - **Notifications** — per-event notification toggles
-- **Transfers** — default bandwidth cap, checksum verification, parallel transfer count, retry limit
+- **Transfers** — default bandwidth cap, checksum verification, parallel transfer count, retry limit, watch-mode timing
 - **rclone** — custom binary path for non-PATH installations
 
 ---

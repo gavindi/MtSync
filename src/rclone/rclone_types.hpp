@@ -125,6 +125,9 @@ struct Job {
     bool        ignore_checksum  = true;
     std::string bandwidth;
     bool        schedule_enabled  = false;
+    bool        watch_enabled     = false; // trigger a run when the local source dir changes
+    int         watch_debounce_ms = -1;    // -1 = use global settings default
+    int         watch_max_wait_ms = -1;    // -1 = use global settings default
     bool        mount_at_startup  = false;
     bool        active            = false;
     bool        running           = false;
@@ -148,7 +151,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Job,
     schedule_enabled, mount_at_startup, active, running, vfs_cache_mode,
     cron_minute, cron_hour, cron_day, cron_month, cron_weekday,
     last_start, last_run, last_status, includes, parallel_transfers, retries,
-    extra_flags)
+    extra_flags, watch_enabled, watch_debounce_ms, watch_max_wait_ms)
 
 // Async callback type used throughout
 template <typename T>

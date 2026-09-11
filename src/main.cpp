@@ -19,6 +19,7 @@
 #include "daemon.hpp"
 #include "application.hpp"
 #include "i18n.hpp"
+#include <giomm/init.h>
 #include <glibmm/i18n.h>
 #include <iostream>
 
@@ -43,6 +44,10 @@ int main(int argc, char* argv[]) {
     }
 
     if (daemon_mode) {
+        // The daemon runs headless (no Gtk::Application), which would otherwise
+        // never register giomm's GObject-wrapper type table — needed for
+        // Gio::FileMonitor (watch mode) and Gio::Subprocess (rclone CLI calls).
+        Gio::init();
         mtsync::MtSyncDaemon daemon;
         daemon.run();
         return 0;
