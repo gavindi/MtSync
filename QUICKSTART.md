@@ -41,6 +41,7 @@ The Add Job dialog opens with source, destination, and any selected files alread
 ## 5. Run It
 
 In the Add Job dialog:
+- **Dry Run** previews what the job would do, without changing anything, in the Compare window
 - **Run Now** runs the job immediately (no schedule set)
 - **Schedule** (Schedule tab → Enable Schedule) runs it automatically on a cron-style schedule
 - **Save** stores the job without running it

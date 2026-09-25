@@ -65,7 +65,8 @@ Glib::RefPtr<CompareRowObject> CompareRowObject::create(
     char status,
     const std::string& src_name, int64_t src_size, const std::string& src_mod,
     const std::string& dst_name, int64_t dst_size, const std::string& dst_mod,
-    const std::string& path)
+    const std::string& path,
+    const std::string& action)
 {
     auto obj = Glib::make_refptr_for_instance(new CompareRowObject());
     obj->property_status  .set_value(Glib::ustring(1, static_cast<gunichar>(status)));
@@ -76,6 +77,7 @@ Glib::RefPtr<CompareRowObject> CompareRowObject::create(
     obj->property_dst_size.set_value(dst_size);
     obj->property_dst_mod .set_value(dst_mod);
     obj->property_path    .set_value(path);
+    obj->property_action  .set_value(action);
     return obj;
 }
 

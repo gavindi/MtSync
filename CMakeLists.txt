@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(MtSync VERSION 0.9.20 LANGUAGES C CXX)
+project(MtSync VERSION 0.9.21 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -156,6 +156,10 @@ install(FILES
     "${CMAKE_SOURCE_DIR}/data/com.mtsync.MtSync.desktop"
     DESTINATION share/applications
 )
+install(FILES
+    "${CMAKE_SOURCE_DIR}/data/com.mtsync.MtSync.metainfo.xml"
+    DESTINATION share/metainfo
+)
 
 # ── Packaging (CPack) ──────────────────────────────────────────────────────
 set(CPACK_PACKAGE_NAME             "mtsync")
@@ -197,6 +201,7 @@ set(CPACK_RPM_PACKAGE_GROUP    "Applications/Internet")
 set(CPACK_RPM_PACKAGE_REQUIRES "gtkmm40, libadwaita, libsoup3, rclone")
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
     "/usr/share/applications"
+    "/usr/share/metainfo"
     "/usr/share/icons"
     "/usr/share/icons/hicolor"
     "/usr/share/icons/hicolor/256x256"

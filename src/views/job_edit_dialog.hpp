@@ -21,24 +21,31 @@
 #include "rclone/rclone_types.hpp"
 #include <gtkmm.h>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 
 namespace mtsync {
 
+namespace rclone { class RcloneManager; }
+class CompareDialog;
+
 class JobEditDialog : public Gtk::Window {
 public:
     using DoneCallback = std::function<void(rclone::Job)>;
 
-    JobEditDialog(DoneCallback on_done);
-    JobEditDialog(const rclone::Job& job, DoneCallback on_done);
-    JobEditDialog(rclone::JobType type,
+    JobEditDialog(rclone::RcloneManager& manager, DoneCallback on_done);
+    JobEditDialog(rclone::RcloneManager& manager, const rclone::Job& job,
+                  DoneCallback on_done);
+    JobEditDialog(rclone::RcloneManager& manager, rclone::JobType type,
                   const std::string& src, const std::string& dst,
                   const std::vector<std::string>& includes,
                   DoneCallback on_done);
+    ~JobEditDialog() override;
     void set_save_callback(DoneCallback cb);
 
 private:
+    rclone::RcloneManager& m_manager;
     DoneCallback           m_on_done;
     DoneCallback           m_on_save;
     std::optional<rclone::Job> m_editing;
@@ -84,8 +91,12 @@ private:
     Gtk::Label*    m_preview_desc_label = nullptr;
 
     // Buttons
-    Gtk::Button* m_action_btn = nullptr;
-    Gtk::Button* m_save_btn   = nullptr;
+    Gtk::Button* m_dry_run_btn = nullptr;
+    Gtk::Button* m_action_btn  = nullptr;
+    Gtk::Button* m_save_btn    = nullptr;
+
+    // Dry-run preview opened from m_dry_run_btn
+    std::unique_ptr<CompareDialog> m_compare_dialog;
 
     void setup_ui(rclone::JobType initial_type,
                   const std::string& initial_src,
@@ -105,6 +116,8 @@ private:
     void update_preview();
     void refresh_calendar_marks();
 
+    void update_dry_run_btn();
+    void on_dry_run();
     void on_commit();
     void on_save();
     static std::string generate_uuid();

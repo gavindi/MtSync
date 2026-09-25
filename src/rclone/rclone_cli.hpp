@@ -75,6 +75,19 @@ public:
     Glib::RefPtr<Gio::Subprocess> check(const std::string& src, const std::string& dst,
                                          AsyncCallback<std::vector<CheckEntry>> callback);
 
+    // rclone sync|copy|move SRC DST --dry-run for `job`, reporting each action it
+    // would have taken. Flags mirror MtSyncDaemon::on_run_job; `global_flags` and
+    // the job's extra_flags are raw CLI tokens. Errors only when rclone failed
+    // without reporting a single action.
+    // Returns the Gio::Subprocess handle so callers can cancel if needed.
+    Glib::RefPtr<Gio::Subprocess> dry_run(const Job& job, int default_transfers,
+                                           const std::string& global_flags,
+                                           AsyncCallback<std::vector<DryRunAction>> callback);
+
+    // Parse the stderr of a `--dry-run --use-json-log` run into its actions.
+    // Lines that are not JSON, or carry no "skipped"/error object, are ignored.
+    static std::vector<DryRunAction> parse_dry_run_log(const std::string& log);
+
 private:
     std::string m_rclone_path;
     std::string m_config_path;

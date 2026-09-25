@@ -17,12 +17,14 @@
  */
 
 #include "views/compare_dialog.hpp"
+#include "settings.hpp"
 #include "widgets/adw_wrapper.hpp"
 #include <adwaita.h>
 #include <algorithm>
 #include <format>
 #include <glibmm/i18n.h>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace mtsync {
 
@@ -128,7 +130,16 @@ CompareDialog::CompareDialog(const std::string& src,
                              const std::string& dst,
                              rclone::RcloneManager& manager)
     : m_src(src), m_dst(dst), m_manager(&manager) {
-    set_title(_("Compare"));
+    init();
+}
+
+CompareDialog::CompareDialog(const rclone::Job& job, rclone::RcloneManager& manager)
+    : m_src(job.source), m_dst(job.destination), m_manager(&manager), m_dry_run_job(job) {
+    init();
+}
+
+void CompareDialog::init() {
+    set_title(m_dry_run_job ? _("Dry Run Preview") : _("Compare"));
     set_default_size(1100, 640);
     set_modal(true);
     set_destroy_with_parent(true);
@@ -136,17 +147,27 @@ CompareDialog::CompareDialog(const std::string& src,
     m_alive = std::make_shared<bool>(true);
     m_page_store = Gio::ListStore<CompareRowObject>::create();
     setup_ui();
-    start_load(manager);
+    start_load(*m_manager);
 
     signal_close_request().connect([this]() -> bool {
-        *m_alive = false;
-        if (m_load_state) {
-            m_load_state->cancelled = true;
-            for (auto& proc : m_load_state->procs)
-                if (proc) proc->force_exit();
-        }
+        cancel_load();
         return false;
     }, false);
+}
+
+// Also cancel here: the owner may destroy the dialog without closing it,
+// and in-flight rclone callbacks must not reach a freed `this`.
+CompareDialog::~CompareDialog() {
+    cancel_load();
+}
+
+void CompareDialog::cancel_load() {
+    if (m_alive) *m_alive = false;
+    if (m_load_state) {
+        m_load_state->cancelled = true;
+        for (auto& proc : m_load_state->procs)
+            if (proc) proc->force_exit();
+    }
 }
 
 // ── UI setup ─────────────────────────────────────────────────────────────
@@ -156,7 +177,18 @@ void CompareDialog::setup_ui() {
     set_child(*root);
 
     // Path label below the window's built-in title bar
-    auto* path_label = Gtk::make_managed<Gtk::Label>(m_src + "  →  " + m_dst);
+    std::string path_text = m_src + "  →  " + m_dst;
+    if (m_dry_run_job) {
+        const char* type_name = "";
+        switch (m_dry_run_job->type) {
+            case rclone::JobType::Sync:  type_name = _("Sync");  break;
+            case rclone::JobType::Copy:  type_name = _("Copy");  break;
+            case rclone::JobType::Move:  type_name = _("Move");  break;
+            case rclone::JobType::Mount: type_name = _("Mount"); break;
+        }
+        path_text = std::string(type_name) + ":  " + path_text;
+    }
+    auto* path_label = Gtk::make_managed<Gtk::Label>(path_text);
     path_label->add_css_class("dim-label");
     path_label->set_margin_top(6);
     path_label->set_margin_bottom(6);
@@ -256,6 +288,14 @@ void CompareDialog::setup_ui() {
     action_bar->append(*m_dst_delete_btn);
     root->append(*action_bar);
 
+    // A dry-run preview is read-only: nothing here should touch either side
+    if (m_dry_run_job) {
+        m_delete_btn->set_visible(false);
+        m_copy_btn->set_visible(false);
+        m_dst_copy_btn->set_visible(false);
+        m_dst_delete_btn->set_visible(false);
+    }
+
     // Main stack: loading / results / error
     m_stack = Gtk::make_managed<Gtk::Stack>();
     m_stack->set_vexpand(true);
@@ -269,7 +309,8 @@ void CompareDialog::setup_ui() {
     auto* spinner = adw::spinner();
     spinner->set_size_request(32, 32);
     loading_box->append(*spinner);
-    auto* loading_lbl = Gtk::make_managed<Gtk::Label>(_("Comparing…"));
+    auto* loading_lbl = Gtk::make_managed<Gtk::Label>(
+        m_dry_run_job ? _("Running dry run…") : _("Comparing…"));
     loading_lbl->add_css_class("dim-label");
     loading_box->append(*loading_lbl);
 
@@ -281,21 +322,26 @@ void CompareDialog::setup_ui() {
     auto* cancel_btn = Gtk::make_managed<Gtk::Button>(_("Cancel"));
     cancel_btn->set_halign(Gtk::Align::CENTER);
     cancel_btn->set_margin_top(12);
-    cancel_btn->set_tooltip_text(_("Cancel the comparison scan and close this dialog"));
-    cancel_btn->signal_clicked().connect([this]() {
-        if (m_load_state) {
-            m_load_state->cancelled = true;
-            for (auto& proc : m_load_state->procs)
-                if (proc) proc->force_exit();
-        }
-        close();
-    });
+    cancel_btn->set_tooltip_text(m_dry_run_job
+        ? _("Cancel the dry run and close this dialog")
+        : _("Cancel the comparison scan and close this dialog"));
+    cancel_btn->signal_clicked().connect([this]() { close(); });
     loading_box->append(*cancel_btn);
 
     m_stack->add(*loading_box, "loading");
 
     // ── "results" page ───────────────────────────────────────────────────
     auto* results_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
+
+    m_summary_label = Gtk::make_managed<Gtk::Label>();
+    m_summary_label->set_xalign(0.0f);
+    m_summary_label->set_wrap(true);
+    m_summary_label->set_margin_top(4);
+    m_summary_label->set_margin_bottom(6);
+    m_summary_label->set_margin_start(12);
+    m_summary_label->set_margin_end(12);
+    m_summary_label->set_visible(m_dry_run_job.has_value());
+    results_box->append(*m_summary_label);
 
     build_column_view();
     auto* scroll = Gtk::make_managed<Gtk::ScrolledWindow>();
@@ -347,6 +393,15 @@ void CompareDialog::setup_ui() {
     m_error_label->set_max_width_chars(60);
     error_box->append(*m_error_label);
     m_stack->add(*error_box, "error");
+
+    // ── "empty" page (dry run with nothing to do) ────────────────────────
+    auto* empty_page = adw::status_page();
+    adw::status_page_set_icon_name(empty_page, "object-select-symbolic");
+    adw::status_page_set_title(empty_page, _("Nothing to Do"));
+    adw::status_page_set_description(empty_page,
+        _("The dry run found no changes to make: the destination is already up to date."));
+    empty_page->set_vexpand(true);
+    m_stack->add(*empty_page, "empty");
 
     m_stack->set_visible_child("loading");
     root->append(*m_stack);
@@ -535,6 +590,10 @@ void CompareDialog::build_column_view() {
     m_column_view->append_column(make_size_col(_("Size"),    "src-size", "src-size"));
     m_column_view->append_column(make_date_col(_("Modified"),"src-mod", "src-mod"));
     m_column_view->append_column(status_col);
+    if (m_dry_run_job) {
+        auto action_col = make_str_col(_("Action"), "action", "action", 0.0f, 150);
+        m_column_view->append_column(action_col);
+    }
     m_column_view->append_column(make_str_col(_("Filename"), "dst-name", "dst-name", 0.0f, 0, true));
     m_column_view->append_column(make_size_col(_("Size"),    "dst-size", "dst-size"));
     m_column_view->append_column(make_date_col(_("Modified"),"dst-mod", "dst-mod"));
@@ -558,10 +617,50 @@ void CompareDialog::start_load(rclone::RcloneManager& manager) {
             m_stack->set_visible_child("error");
             return;
         }
-        merge_results(state->src_entries, state->dst_entries, state->check_entries);
+        if (m_dry_run_job) {
+            auto checks = dry_run_to_checks(state->src_entries, state->dst_entries,
+                                            state->dry_actions);
+            merge_results(state->src_entries, state->dst_entries, checks);
+            update_dry_run_summary();
+            if (m_all_rows.empty() && m_dry_errors.empty()) {
+                m_stack->set_visible_child("empty");
+                return;
+            }
+        } else {
+            merge_results(state->src_entries, state->dst_entries, state->check_entries);
+        }
         rebuild_filter_cache();
         show_page(0);
     };
+
+    if (m_dry_run_job) {
+        // The listings only supply sizes and dates for the preview rows, so a
+        // failed one (typically a destination that doesn't exist yet) is not
+        // an error: only the dry run's own failure is.
+        state->procs.push_back(
+            manager.cli().lsjson_r(m_src, [state, try_finish](auto result) {
+                if (state->cancelled) return;
+                if (result) state->src_entries = std::move(*result);
+                try_finish();
+            }));
+        state->procs.push_back(
+            manager.cli().lsjson_r(m_dst, [state, try_finish](auto result) {
+                if (state->cancelled) return;
+                if (result) state->dst_entries = std::move(*result);
+                try_finish();
+            }));
+        auto settings = load_settings();
+        state->procs.push_back(
+            manager.cli().dry_run(*m_dry_run_job, settings.parallel_transfers,
+                                  settings.global_rclone_flags,
+                                  [state, try_finish](auto result) {
+                if (state->cancelled) return;
+                if (result) state->dry_actions = std::move(*result);
+                else if (state->error.empty()) state->error = result.error();
+                try_finish();
+            }));
+        return;
+    }
 
     state->procs.push_back(
         manager.cli().lsjson_r(m_src, [state, try_finish](auto result) {
@@ -650,13 +749,123 @@ void CompareDialog::merge_results(const std::vector<rclone::FileEntry>& src_file
             ce.status,
             src_name, src_size, src_mod,
             dst_name, dst_size, dst_mod,
-            ce.path));
+            ce.path, ce.action));
     }
 
     int file_count = 0;
     for (auto& r : m_all_rows)
         if (r->property_status.get_value() != "/") ++file_count;
     m_total_pages = file_count == 0 ? 1 : (file_count + PAGE_SIZE - 1) / PAGE_SIZE;
+}
+
+// ── Dry run ───────────────────────────────────────────────────────────────
+
+std::vector<rclone::CheckEntry> CompareDialog::dry_run_to_checks(
+        const std::vector<rclone::FileEntry>& src_files,
+        const std::vector<rclone::FileEntry>& dst_files,
+        const std::vector<rclone::DryRunAction>& actions) {
+    m_dry_counts = {};
+    m_dry_errors.clear();
+    const auto type = m_dry_run_job ? m_dry_run_job->type : rclone::JobType::Sync;
+
+    std::unordered_set<std::string> dst_paths;
+    for (auto& e : dst_files) if (!e.is_dir) dst_paths.insert(e.path);
+
+    enum class Kind { Copy, Update, Move, Delete, DeleteSrc, Error };
+    // Keyed by path so a file rclone reports twice yields a single row
+    std::unordered_map<std::string, Kind> by_path;
+    auto add_transfer = [&](const std::string& path, bool is_move) {
+        by_path[path] = is_move ? Kind::Move
+                      : dst_paths.count(path) ? Kind::Update : Kind::Copy;
+    };
+
+    for (auto& a : actions) {
+        if (a.is_error) {
+            if (a.is_fs) m_dry_errors.push_back(a.message);
+            else by_path[a.path] = Kind::Error;
+            continue;
+        }
+        if (a.is_fs) {
+            // A whole-directory server-side move is logged once for the remote
+            // rather than per file: every source file would move.
+            if (a.skipped == "server-side directory move")
+                for (auto& e : src_files)
+                    if (!e.is_dir) add_transfer(e.path, true);
+            continue;
+        }
+        if (a.skipped == "copy") {
+            add_transfer(a.path, false);
+        } else if (a.skipped == "move") {
+            add_transfer(a.path, true);
+        } else if (a.skipped == "delete") {
+            // Sync deletes destination files missing from the source; Move
+            // deletes source files the destination already has identically.
+            by_path[a.path] = type == rclone::JobType::Move ? Kind::DeleteSrc : Kind::Delete;
+        }
+        // Directory creation/removal and modtime-only updates aren't file rows
+    }
+
+    std::vector<rclone::CheckEntry> checks;
+    checks.reserve(by_path.size());
+    for (auto& [path, kind] : by_path) {
+        rclone::CheckEntry ce;
+        ce.path = path;
+        switch (kind) {
+            case Kind::Copy:
+                ce.status = '+'; ce.action = _("Copy");   ++m_dry_counts.copy;   break;
+            case Kind::Update:
+                ce.status = '*'; ce.action = _("Update"); ++m_dry_counts.update; break;
+            case Kind::Move:
+                ce.status = dst_paths.count(path) ? '*' : '+';
+                ce.action = _("Move");                    ++m_dry_counts.move;   break;
+            case Kind::Delete:
+                ce.status = '-'; ce.action = _("Delete"); ++m_dry_counts.del;    break;
+            case Kind::DeleteSrc:
+                ce.status = '='; ce.action = _("Delete from source"); ++m_dry_counts.del_src; break;
+            case Kind::Error:
+                ce.status = '!'; ce.action = _("Error");  ++m_dry_counts.error;  break;
+        }
+        checks.push_back(std::move(ce));
+    }
+    return checks;
+}
+
+void CompareDialog::update_dry_run_summary() {
+    if (!m_summary_label) return;
+    const auto& c = m_dry_counts;
+    std::vector<std::string> parts;
+    if (c.copy)
+        parts.push_back(std::vformat(ngettext("{} file to copy", "{} files to copy", c.copy),
+                                     std::make_format_args(c.copy)));
+    if (c.update)
+        parts.push_back(std::vformat(ngettext("{} file to update", "{} files to update", c.update),
+                                     std::make_format_args(c.update)));
+    if (c.move)
+        parts.push_back(std::vformat(ngettext("{} file to move", "{} files to move", c.move),
+                                     std::make_format_args(c.move)));
+    if (c.del)
+        parts.push_back(std::vformat(ngettext("{} file to delete", "{} files to delete", c.del),
+                                     std::make_format_args(c.del)));
+    if (c.del_src)
+        parts.push_back(std::vformat(ngettext("{} file to delete from the source",
+                                              "{} files to delete from the source", c.del_src),
+                                     std::make_format_args(c.del_src)));
+    if (c.error)
+        parts.push_back(std::vformat(ngettext("{} error", "{} errors", c.error),
+                                     std::make_format_args(c.error)));
+
+    std::string joined;
+    for (auto& p : parts) {
+        if (!joined.empty()) joined += ", ";
+        joined += p;
+    }
+    std::string text = joined.empty()
+        ? std::string(_("Dry run complete. Nothing was changed."))
+        : std::vformat(_("Dry run complete. Nothing was changed. If run, this job would affect: {}"),
+                       std::make_format_args(joined));
+    for (auto& e : m_dry_errors)
+        text += "\n" + std::string(_("Error: ")) + e;
+    m_summary_label->set_text(text);
 }
 
 // ── Pagination ────────────────────────────────────────────────────────────

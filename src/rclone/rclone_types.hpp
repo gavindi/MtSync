@@ -77,6 +77,16 @@ struct FileEntry {
 struct CheckEntry {
     char        status = '=';
     std::string path;   // relative path (matches FileEntry::path from lsjson -R)
+    std::string action; // dry-run preview only: what the job would do, e.g. "Copy"
+};
+
+// One simulated action from `rclone sync|copy|move --dry-run --use-json-log`
+struct DryRunAction {
+    std::string skipped;       // rclone's "skipped" field: "copy", "move", "delete", ...
+    std::string path;          // "object": path relative to the root it applies to
+    bool        is_fs = false; // applies to a whole remote (e.g. a server-side directory move)
+    bool        is_error = false;
+    std::string message;       // "msg", kept for error rows
 };
 
 struct SyncStats {

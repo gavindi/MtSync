@@ -18,6 +18,7 @@
 
 #include "views/job_edit_dialog.hpp"
 #include "rclone/cron_utils.hpp"
+#include "views/compare_dialog.hpp"
 #include "settings.hpp"
 #include "watch/directory_watcher.hpp"
 #include "widgets/adw_wrapper.hpp"
@@ -65,23 +66,28 @@ constexpr rclone::JobType index_to_job_type(guint i) {
 
 } // namespace
 
-JobEditDialog::JobEditDialog(DoneCallback on_done)
-    : m_on_done(std::move(on_done)) {
+JobEditDialog::JobEditDialog(rclone::RcloneManager& manager, DoneCallback on_done)
+    : m_manager(manager), m_on_done(std::move(on_done)) {
     setup_ui(rclone::JobType::Sync, "", "");
 }
 
-JobEditDialog::JobEditDialog(const rclone::Job& job, DoneCallback on_done)
-    : m_on_done(std::move(on_done)), m_editing(job), m_includes(job.includes) {
+JobEditDialog::JobEditDialog(rclone::RcloneManager& manager, const rclone::Job& job,
+                               DoneCallback on_done)
+    : m_manager(manager), m_on_done(std::move(on_done)), m_editing(job),
+      m_includes(job.includes) {
     setup_ui(job.type, job.source, job.destination);
 }
 
-JobEditDialog::JobEditDialog(rclone::JobType type,
+JobEditDialog::JobEditDialog(rclone::RcloneManager& manager, rclone::JobType type,
                                const std::string& src, const std::string& dst,
                                const std::vector<std::string>& includes,
                                DoneCallback on_done)
-    : m_on_done(std::move(on_done)), m_includes(includes) {
+    : m_manager(manager), m_on_done(std::move(on_done)), m_includes(includes) {
     setup_ui(type, src, dst);
 }
+
+// Out of line so the unique_ptr<CompareDialog> member sees the complete type
+JobEditDialog::~JobEditDialog() = default;
 
 void JobEditDialog::setup_ui(rclone::JobType initial_type,
                                const std::string& initial_src,
@@ -532,6 +538,9 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     adw::preferences_group_add(adv_group, m_extra_flags_entry);
 
     // ── Buttons (outside tab stack) ───────────────────────────────────────
+    m_dry_run_btn = Gtk::make_managed<Gtk::Button>(_("Dry Run"));
+    m_dry_run_btn->signal_clicked().connect(sigc::mem_fun(*this, &JobEditDialog::on_dry_run));
+
     m_action_btn = Gtk::make_managed<Gtk::Button>(sched_on ? _("Schedule") : _("Run Now"));
     m_action_btn->add_css_class("destructive-action");
     m_action_btn->set_tooltip_text(_("Run or schedule this job immediately with the current settings"));
@@ -552,6 +561,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
     btn_box->set_halign(Gtk::Align::CENTER);
     btn_box->set_margin_top(6);
     btn_box->set_margin_bottom(18);
+    btn_box->append(*m_dry_run_btn);
     btn_box->append(*m_action_btn);
     btn_box->append(*m_save_btn);
     btn_box->append(*cancel_btn);
@@ -573,6 +583,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
             self->m_dry_run_switch->set_visible(sel != 3);            // Not for Mount
             self->m_enable_checksum_switch->set_visible(sel != 3);    // Not for Mount
             self->m_watch_switch->set_visible(sel != 3);              // Not for Mount
+            self->update_dry_run_btn();
             self->set_default_size(460, 1);
         }), this);
 
@@ -585,6 +596,13 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
             self->m_watch_switch->set_tooltip_text(local
                 ? _("Automatically run this job shortly after files change in the source directory, in addition to (or instead of) the schedule above. Requires a local source directory.")
                 : _("Watch mode requires a local source directory"));
+            self->update_dry_run_btn();
+        }), this);
+
+    // Destination entry → dry run needs both ends of the transfer
+    g_signal_connect(m_dest_entry->gobj(), "changed",
+        G_CALLBACK(+[](GtkEditable*, gpointer data) {
+            static_cast<JobEditDialog*>(data)->update_dry_run_btn();
         }), this);
 
     // Bi-directional sync switch → show/hide dependent Force Deletes row
@@ -593,6 +611,7 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
             auto* self = static_cast<JobEditDialog*>(data);
             self->m_bisync_force_switch->set_visible(self->m_bisync_switch->get_visible()
                 && adw::switch_row_get_active(self->m_bisync_switch));
+            self->update_dry_run_btn();
         }), this);
 
     // Schedule switch → update button label and save visibility
@@ -649,6 +668,31 @@ void JobEditDialog::setup_ui(rclone::JobType initial_type,
 
     // Initial preview
     update_preview();
+    update_dry_run_btn();
+}
+
+void JobEditDialog::update_dry_run_btn() {
+    guint sel = adw::combo_row_get_selected(m_type_combo);
+    bool bisync = m_bisync_switch->get_visible() && adw::switch_row_get_active(m_bisync_switch);
+    auto non_empty = [](const char* t) { return t && *t; };
+    bool have_paths = non_empty(adw::entry_row_get_text(m_source_entry))
+                   && non_empty(adw::entry_row_get_text(m_dest_entry));
+    m_dry_run_btn->set_visible(sel != 3); // Not for Mount
+    m_dry_run_btn->set_sensitive(have_paths && !bisync);
+    m_dry_run_btn->set_tooltip_text(bisync
+        ? _("Dry run preview isn't available for bi-directional sync")
+        : _("Simulate this job now with the current settings and preview what would change. Nothing is modified, regardless of the Dry Run toggle."));
+}
+
+void JobEditDialog::on_dry_run() {
+    auto job = build_job();
+    if (job.source.empty() || job.destination.empty() || job.bisync
+        || job.type == rclone::JobType::Mount) return;
+    // The edit dialog stays open (and nothing is saved) so the user can go
+    // straight on to Run Now, or adjust the settings and preview again.
+    m_compare_dialog = std::make_unique<CompareDialog>(job, m_manager);
+    m_compare_dialog->set_transient_for(*this);
+    m_compare_dialog->present();
 }
 
 rclone::Job JobEditDialog::get_cron_job() const {

@@ -29,18 +29,20 @@
 
 namespace mtsync {
 
+namespace rclone { class RcloneManager; }
 class JobEditDialog;
 class LogViewDialog;
 
 class JobView : public Gtk::Box {
 public:
-    explicit JobView(DaemonProxy* daemon_proxy);
+    JobView(rclone::RcloneManager& manager, DaemonProxy* daemon_proxy);
     ~JobView() override;
 
     void add_job(rclone::Job job);
     void add_job_no_run(rclone::Job job);
 
 private:
+    rclone::RcloneManager& m_manager;
     DaemonProxy* m_daemon_proxy = nullptr;
 
     Gtk::ScrolledWindow m_scroll;

@@ -227,7 +227,7 @@ void BrowserView::show_job_dialog(rclone::JobType type) {
         }
     }
 
-    m_job_dialog = std::make_unique<JobEditDialog>(type, src, dst, includes,
+    m_job_dialog = std::make_unique<JobEditDialog>(m_manager, type, src, dst, includes,
         [this](rclone::Job job) { signal_job_created.emit(job); });
     m_job_dialog->set_save_callback([this](rclone::Job job) {
         signal_job_saved.emit(job);

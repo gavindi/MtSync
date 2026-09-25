@@ -19,6 +19,7 @@
 #include "rclone_cli.hpp"
 #include <glibmm.h>
 #include <nlohmann/json.hpp>
+#include <algorithm>
 #include <sstream>
 
 namespace mtsync::rclone {
@@ -378,6 +379,107 @@ Glib::RefPtr<Gio::Subprocess> RcloneCli::check(const std::string& src, const std
             }
             callback(std::move(entries));
         });
+}
+
+Glib::RefPtr<Gio::Subprocess> RcloneCli::dry_run(const Job& job, int default_transfers,
+                                                   const std::string& global_flags,
+                                                   AsyncCallback<std::vector<DryRunAction>> callback) {
+    std::vector<std::string> args;
+    switch (job.type) {
+        case JobType::Sync:  args.push_back("sync"); break;
+        case JobType::Copy:  args.push_back("copy"); break;
+        case JobType::Move:  args.push_back("move"); break;
+        case JobType::Mount:
+            callback(std::unexpected("Mount jobs cannot be dry-run"));
+            return {};
+    }
+    args.push_back(job.source);
+    args.push_back(job.destination);
+    args.push_back("--dry-run");
+    args.push_back("--use-json-log");
+    // A preview should fail fast rather than repeat a failing run three times
+    args.push_back("--retries");
+    args.push_back("1");
+    // Without this a Move whose remote supports it is simulated as one whole
+    // directory move, with no per-file detail to preview.
+    if (job.type == JobType::Move) {
+        args.push_back("--disable");
+        args.push_back("DirMove");
+    }
+    if (job.ignore_checksum) args.push_back("--ignore-checksum");
+    int transfers = job.parallel_transfers > 0 ? job.parallel_transfers : default_transfers;
+    if (transfers > 0) {
+        args.push_back("--transfers");
+        args.push_back(std::to_string(transfers));
+    }
+    if (job.type == JobType::Sync) args.push_back("--create-empty-src-dirs");
+    for (auto& inc : job.includes) {
+        args.push_back("--include");
+        args.push_back(inc);
+    }
+    // Global flags first, then the job's own: rclone takes the last value of a
+    // repeated flag, so per-job flags keep the priority they have in the daemon.
+    for (const auto* flags : {&global_flags, &job.extra_flags}) {
+        std::istringstream iss(*flags);
+        std::string tok;
+        while (iss >> tok) args.push_back(std::move(tok));
+    }
+
+    return run_command(std::move(args), [callback = std::move(callback)](
+        const std::string&, const std::string& err, int code) {
+        auto actions = parse_dry_run_log(err);
+        bool any_action = std::ranges::any_of(actions, [](auto& a) { return !a.is_error; });
+        if (code != 0 && !any_action) {
+            // Surface rclone's own error text; JSON lines carry it in "msg".
+            std::string msg;
+            std::vector<std::string> seen;
+            std::istringstream ss(err);
+            std::string line;
+            while (std::getline(ss, line)) {
+                if (line.empty()) continue;
+                try {
+                    auto j = json::parse(line);
+                    if (j.value("level", "") != "error") continue;
+                    line = j.value("msg", "");
+                } catch (const json::exception&) {}
+                // Skip the retry summaries and anything already reported
+                if (line.empty() || line.starts_with("Attempt ")
+                    || std::ranges::find(seen, line) != seen.end()) continue;
+                seen.push_back(line);
+                if (!msg.empty()) msg += '\n';
+                msg += line;
+            }
+            callback(std::unexpected(msg.empty() ? "rclone dry run failed" : msg));
+            return;
+        }
+        callback(std::move(actions));
+    });
+}
+
+std::vector<DryRunAction> RcloneCli::parse_dry_run_log(const std::string& log) {
+    std::vector<DryRunAction> actions;
+    std::istringstream ss(log);
+    std::string line;
+    while (std::getline(ss, line)) {
+        if (line.empty() || line.front() != '{') continue;
+        json j;
+        try { j = json::parse(line); } catch (const json::exception&) { continue; }
+        if (!j.is_object() || !j.contains("object") || !j["object"].is_string()) continue;
+
+        DryRunAction a;
+        a.path  = j["object"].get<std::string>();
+        a.is_fs = j.value("objectType", "").ends_with("Fs");
+        if (j.contains("skipped") && j["skipped"].is_string()) {
+            a.skipped = j["skipped"].get<std::string>();
+        } else if (j.value("level", "") == "error") {
+            a.is_error = true;
+            a.message  = j.value("msg", "");
+        } else {
+            continue;
+        }
+        actions.push_back(std::move(a));
+    }
+    return actions;
 }
 
 } // namespace mtsync::rclone

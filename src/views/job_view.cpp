@@ -78,8 +78,9 @@ const char* type_icon(rclone::JobType t) {
 
 } // namespace
 
-JobView::JobView(DaemonProxy* daemon_proxy)
+JobView::JobView(rclone::RcloneManager& manager, DaemonProxy* daemon_proxy)
     : Gtk::Box(Gtk::Orientation::VERTICAL)
+    , m_manager(manager)
     , m_daemon_proxy(daemon_proxy)
     , m_paned(Gtk::Orientation::VERTICAL) {
 
@@ -601,7 +602,7 @@ void JobView::append_job_row(size_t index) {
 
 void JobView::show_add_dialog() {
     auto* toplevel = dynamic_cast<Gtk::Window*>(get_root());
-    m_edit_dialog = std::unique_ptr<JobEditDialog>(new JobEditDialog(
+    m_edit_dialog = std::unique_ptr<JobEditDialog>(new JobEditDialog(m_manager,
         [this](rclone::Job job) { add_job(std::move(job)); }));
     m_edit_dialog->set_save_callback([this](rclone::Job job) {
         add_job_no_run(std::move(job));
@@ -613,7 +614,7 @@ void JobView::show_add_dialog() {
 void JobView::show_edit_dialog(size_t index) {
     if (index >= m_jobs.size()) return;
     auto* toplevel = dynamic_cast<Gtk::Window*>(get_root());
-    m_edit_dialog = std::unique_ptr<JobEditDialog>(new JobEditDialog(m_jobs[index],
+    m_edit_dialog = std::unique_ptr<JobEditDialog>(new JobEditDialog(m_manager, m_jobs[index],
         [this, index](rclone::Job job) {
             if (index < m_jobs.size()) {
                 m_jobs[index] = std::move(job);

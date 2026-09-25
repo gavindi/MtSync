@@ -24,6 +24,7 @@
 #include <giomm.h>
 #include <gtkmm.h>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -35,10 +36,23 @@ public:
                   const std::string& dst,
                   rclone::RcloneManager& manager);
 
+    // Dry-run preview: runs `job` with --dry-run (whatever its Dry Run toggle
+    // says) and shows the actions it would have taken, read-only.
+    CompareDialog(const rclone::Job& job, rclone::RcloneManager& manager);
+    ~CompareDialog() override;
+
 private:
     std::string m_src;
     std::string m_dst;
     rclone::RcloneManager* m_manager = nullptr;
+    std::optional<rclone::Job> m_dry_run_job; // set = dry-run preview mode
+
+    // Dry-run tallies for the summary line, filled by dry_run_to_checks()
+    struct DryRunCounts {
+        int copy = 0, update = 0, move = 0, del = 0, del_src = 0, error = 0;
+    };
+    DryRunCounts m_dry_counts;
+    std::vector<std::string> m_dry_errors; // errors not tied to a single file
 
     // Full merged dataset — populated after all three async ops complete
     std::vector<Glib::RefPtr<CompareRowObject>> m_all_rows;
@@ -57,6 +71,7 @@ private:
     Gtk::Button*     m_prev_btn    = nullptr;
     Gtk::Button*     m_next_btn    = nullptr;
     Gtk::Label*      m_error_label = nullptr;
+    Gtk::Label*      m_summary_label = nullptr; // dry-run mode only
     Gtk::Button*       m_delete_btn      = nullptr;  // delete from source
     Gtk::Button*       m_copy_btn        = nullptr;  // copy src → dst
     Gtk::Button*       m_dst_copy_btn    = nullptr;  // copy dst → src
@@ -77,6 +92,7 @@ private:
         std::vector<rclone::FileEntry>  src_entries;
         std::vector<rclone::FileEntry>  dst_entries;
         std::vector<rclone::CheckEntry> check_entries;
+        std::vector<rclone::DryRunAction> dry_actions;
         int         done_count = 0;
         std::string error;
         std::vector<Glib::RefPtr<Gio::Subprocess>> procs;
@@ -88,12 +104,19 @@ private:
     // Alive sentinel: set to false on close so in-flight async callbacks skip `this`
     std::shared_ptr<bool> m_alive;
 
+    void init();
+    void cancel_load();
     void setup_ui();
     void build_column_view();
     void start_load(rclone::RcloneManager& manager);
     void merge_results(const std::vector<rclone::FileEntry>& src_files,
                        const std::vector<rclone::FileEntry>& dst_files,
                        const std::vector<rclone::CheckEntry>& checks);
+    std::vector<rclone::CheckEntry> dry_run_to_checks(
+        const std::vector<rclone::FileEntry>& src_files,
+        const std::vector<rclone::FileEntry>& dst_files,
+        const std::vector<rclone::DryRunAction>& actions);
+    void update_dry_run_summary();
     void rebuild_filter_cache();
     void show_page(int page);
     void update_pagination_controls();

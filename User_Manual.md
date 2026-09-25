@@ -190,6 +190,7 @@ Selecting a preset fills all fields instantly. Editing any field automatically s
 
 ### Running or Saving
 
+- **Dry Run** — previews the job without changing anything (Sync, Copy and Move only). It always simulates the job with the dialog's current settings, whatever the **Dry Run** toggle says, then opens the Compare window listing every file that would be copied, updated, moved or deleted. The job isn't saved and the dialog stays open, so you can go straight on to **Run Now**. Not available for bi-directional sync
 - **Run Now** — executes the job immediately and saves it (shown when no schedule is set)
 - **Schedule** — saves the job with its schedule active (shown when Enable Schedule is on)
 - **Save** — saves the job without running it (available when no schedule is set)

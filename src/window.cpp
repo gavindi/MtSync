@@ -27,7 +27,7 @@ MtSyncWindow::MtSyncWindow(rclone::RcloneManager& manager, DaemonProxy* daemon_p
     : m_settings(settings)
     , m_daemon_proxy(daemon_proxy)
     , m_remotes_view(manager)
-    , m_job_view(daemon_proxy)
+    , m_job_view(manager, daemon_proxy)
     , m_browser_view(manager)
     , m_settings_view(m_settings)
     , m_about_view(manager, daemon_proxy, m_settings) {
