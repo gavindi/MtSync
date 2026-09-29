@@ -119,13 +119,16 @@ build_rpm() {
 build_appimage() {
     log "Packaging AppImage"
     require wget
-    ldconfig -p 2>/dev/null | grep -q libfuse.so.2 \
-        || die "libfuse2 is required to run linuxdeploy's AppImage. Install it first."
 
     local appdir="$BUILD_DIR/AppDir"
     log "Installing to AppDir"
     rm -rf "$appdir"
     DESTDIR="$SCRIPT_DIR/$appdir" cmake --install "$BUILD_DIR"
+
+    log "Bundling rclone"
+    require curl
+    require unzip
+    packaging/appimage/fetch-rclone.sh "$appdir"
 
     local linuxdeploy="$BUILD_DIR/linuxdeploy"
     local gtk_plugin="$BUILD_DIR/linuxdeploy-plugin-gtk.sh"
@@ -142,6 +145,7 @@ build_appimage() {
     fi
 
     ( cd "$BUILD_DIR" && \
+        APPIMAGE_EXTRACT_AND_RUN=1 \
         DEPLOY_GTK_VERSION=4 VERSION="$VERSION" PATH="$SCRIPT_DIR/$BUILD_DIR:$PATH" \
         ./linuxdeploy --appdir AppDir --plugin gtk --output appimage )
 
@@ -150,6 +154,10 @@ build_appimage() {
     dst="$BUILD_DIR/mtsync_${VERSION}_${ARCH}.AppImage"
     mv "$src" "$dst"
     echo "Built: $dst"
+
+    log "Checking AppImage is self-contained"
+    packaging/appimage/check-appimage.sh "$dst" \
+        || warn "This AppImage is not portable to the Ubuntu 24.04 baseline. Release AppImages must be built on Ubuntu 24.04 (as CI does)."
 }
 
 # ── Flatpak ──────────────────────────────────────────────────────────────────

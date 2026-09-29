@@ -20,6 +20,7 @@
 #include "window.hpp"
 #include "views/welcome_dialog.hpp"
 #include "widgets/adw_wrapper.hpp"
+#include "sandbox.hpp"
 #include <glib.h>
 #include <glibmm.h>
 #include <nlohmann/json.hpp>
@@ -45,11 +46,7 @@ void MtSyncApplication::ensure_daemon_running() {
     if (!m_daemon_proxy->connect()) {
         g_message("Daemon not running, starting it...");
         
-        // Prefer our own binary so a dev build doesn't launch the installed one
-        std::string exe_path = "/proc/self/exe";
-        if (!Glib::file_test(exe_path, Glib::FileTest::EXISTS)) {
-            exe_path = Glib::find_program_in_path("mtsync");
-        }
+        std::string exe_path = sandbox::self_exe();
 
         try {
             Glib::spawn_async(

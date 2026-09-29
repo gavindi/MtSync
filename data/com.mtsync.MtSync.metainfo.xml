@@ -65,6 +65,11 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="0.9.22" date="2026-09-30">
+      <description>
+        <p>Self-contained AppImage: it now bundles rclone, so nothing else needs installing, and runs on Ubuntu 24.04 or any newer distro. Also fixes the background daemon and "Start daemon on login" when running from the AppImage.</p>
+      </description>
+    </release>
     <release version="0.9.21" date="2026-09-26">
       <description>
         <p>Dry Run preview: simulate a Sync, Copy or Move job from the job dialog and see every file it would copy, update or delete in the Compare window before running it for real.</p>

@@ -20,6 +20,7 @@
 #include "rclone/cron_utils.hpp"
 #include "ipc/protocol.hpp"
 #include "settings.hpp"
+#include "sandbox.hpp"
 #include <glibmm/i18n.h>
 #include <algorithm>
 #include <format>
@@ -141,12 +142,8 @@ MtSyncDaemon::MtSyncDaemon() {
             m_ipc_server->send_to_all(make_response(ipc::ResponseType::ShowWindow, {}));
         } else {
             // No GUI connected — launch one; --show overrides start_minimized.
-            // Prefer our own binary so a dev build doesn't launch the installed one.
-            std::string exe = "/proc/self/exe";
-            if (!fs::exists(exe)) {
-                exe = Glib::find_program_in_path("mtsync");
-                if (exe.empty()) return;
-            }
+            std::string exe = sandbox::self_exe();
+            if (exe.empty()) return;
             try {
                 Glib::spawn_async({}, {exe, "--show"});
             } catch (const Glib::Error& e) {

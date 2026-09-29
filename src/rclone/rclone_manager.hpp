@@ -20,6 +20,7 @@
 
 #include "rclone_cli.hpp"
 #include "rclone_rc.hpp"
+#include "sandbox.hpp"
 
 namespace mtsync::rclone {
 
@@ -31,7 +32,7 @@ public:
     RcloneRc& rc() { return m_rc; }
 
 private:
-    RcloneCli m_cli;
+    RcloneCli m_cli{sandbox::rclone_program()};
     RcloneRc m_rc;
 };
 

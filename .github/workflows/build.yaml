@@ -110,6 +110,9 @@ jobs:
       - name: Install to AppDir
         run: DESTDIR=$(pwd)/AppDir cmake --install build
 
+      - name: Bundle rclone
+        run: packaging/appimage/fetch-rclone.sh AppDir
+
       - name: Download linuxdeploy
         run: |
           wget -q -O linuxdeploy \
@@ -132,6 +135,26 @@ jobs:
             --plugin gtk \
             --output appimage
           mv *.AppImage mtsync_${VERSION}_$(uname -m).AppImage
+
+      - name: Check AppImage is self-contained
+        run: packaging/appimage/check-appimage.sh mtsync_*.AppImage
+
+      # Run it on clean containers that have only the host-provided libraries
+      # (see HOST_ALLOWLIST in check-appimage.sh), proving every bundled library
+      # resolves. No FUSE in containers, hence APPIMAGE_EXTRACT_AND_RUN.
+      - name: Smoke-test AppImage on other distros
+        run: |
+          DEB_LIBS="libgl1 libegl1 libgbm1 libdrm2 libfontconfig1 libfreetype6 libharfbuzz0b libfribidi0 libx11-6 libx11-xcb1 libxcb1 libwayland-client0 libexpat1 libgmp10 libgpg-error0 libcom-err2 zlib1g"
+          RPM_LIBS="mesa-libGL mesa-libEGL mesa-libgbm libdrm fontconfig freetype harfbuzz fribidi libX11 libX11-xcb libxcb libwayland-client expat gmp libgpg-error libcom_err zlib-ng-compat"
+          run() {
+            echo "::group::$1"
+            docker run --rm -v "$PWD:/w" -w /w -e APPIMAGE_EXTRACT_AND_RUN=1 \
+              -e DEBIAN_FRONTEND=noninteractive "$1" bash -ec "$2 && ./mtsync_*.AppImage --help"
+            echo "::endgroup::"
+          }
+          run ubuntu:24.04  "apt-get update -qq && apt-get install -y -qq $DEB_LIBS >/dev/null"
+          run debian:13     "apt-get update -qq && apt-get install -y -qq $DEB_LIBS >/dev/null"
+          run fedora:latest "dnf install -y -q $RPM_LIBS"
 
       - uses: actions/upload-artifact@v4
         with:

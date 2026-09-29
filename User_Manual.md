@@ -6,7 +6,7 @@ Mt. Sync is a desktop application for managing cloud and network storage using [
 
 ## Quick-Start Checklist
 
-1. Install `rclone` and ensure it is on your system PATH (or set a custom path in **Settings**)
+1. Install `rclone` and ensure it is on your system PATH (or set a custom path in **Settings**). The AppImage ships its own rclone, so you can skip this step
 2. Launch Mt. Sync
 3. Go to the **Backends** tab and add at least one remote (cloud or network storage location)
 4. Go to the **Browser** tab and navigate your remote in one of the panes

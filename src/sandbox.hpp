@@ -35,6 +35,38 @@ inline bool in_snap() {
     return std::getenv("SNAP") != nullptr;
 }
 
+// The AppImage runtime sets $APPIMAGE (path to the .AppImage file) and
+// $APPDIR (its temporary FUSE mount point) before exec'ing AppRun.
+inline bool in_appimage() {
+    return std::getenv("APPIMAGE") != nullptr && std::getenv("APPDIR") != nullptr;
+}
+
+// Executable to re-launch ourselves with (daemon, GUI). Inside an AppImage,
+// /proc/self/exe points into this process's FUSE mount, which the runtime
+// unmounts as soon as the launching process exits — so a spawned daemon must
+// go through $APPIMAGE to get a mount of its own. Returns "" if not found.
+inline std::string self_exe() {
+    if (in_appimage()) return std::getenv("APPIMAGE");
+    std::error_code ec;
+    // Prefer our own binary so a dev build doesn't launch the installed one
+    if (std::filesystem::exists("/proc/self/exe", ec)) return "/proc/self/exe";
+    gchar* found = g_find_program_in_path("mtsync");
+    std::string exe = found ? found : "";
+    g_free(found);
+    return exe;
+}
+
+// rclone binary to run. The AppImage ships its own rclone in usr/bin and
+// always uses it; everywhere else rclone comes from PATH.
+inline std::string rclone_program() {
+    if (in_appimage()) {
+        auto bundled = std::filesystem::path(std::getenv("APPDIR")) / "usr/bin/rclone";
+        std::error_code ec;
+        if (std::filesystem::exists(bundled, ec)) return bundled.string();
+    }
+    return "rclone";
+}
+
 // Path to the real user home directory, bypassing sandbox redirection.
 // Inside a Snap, $HOME is redirected to $SNAP_USER_DATA — use $SNAP_REAL_HOME.
 // Inside Flatpak, the host home is already mounted at /home/$USER when
@@ -63,6 +95,17 @@ inline std::string autostart_exec() {
              + (id ? id : "com.mtsync.MtSync") + " --daemon";
     }
     if (in_snap()) return "/snap/bin/mtsync --daemon";
+    if (in_appimage()) {
+        // Desktop Entry spec: quote the path and backslash-escape " ` $ \ inside
+        // the quotes; the string-value escape rule then doubles each backslash.
+        std::string quoted = "\"";
+        for (char c : std::string(std::getenv("APPIMAGE"))) {
+            if (c == '\\')                           quoted += "\\\\\\\\";
+            else if (c == '"' || c == '`' || c == '$') { quoted += "\\\\"; quoted += c; }
+            else                                     quoted += c;
+        }
+        return quoted + "\" --daemon";
+    }
     return "mtsync --daemon";
 }
 

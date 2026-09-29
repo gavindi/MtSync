@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.22 — Self-Contained AppImage
+
+- **The AppImage now bundles rclone**: a pinned rclone release (v1.75.1, SHA256-verified) is installed into the AppImage's `usr/bin`. When running as an AppImage, Mt. Sync always uses that copy, for both the CLI calls and `rclone rcd`, via a new `sandbox::rclone_program()`. rclone no longer has to be installed on the host. Other packages (deb, rpm, Flatpak, Snap) still use `rclone` from PATH. The AppImage grows from about 38 MB to about 60 MB
+- **Fixed: the daemon ran from a mount that disappears (AppImage)**: the GUI started the daemon, and the daemon started the GUI from its tray icon, by re-running `/proc/self/exe`. Inside an AppImage that path is in the launching process's temporary FUSE mount, which the AppImage runtime unmounts as soon as that process exits, pulling the binary out from under the daemon. Both now go through a new `sandbox::self_exe()`, which re-launches `$APPIMAGE` so each process gets its own mount
+- **Fixed: "Start daemon on login" did nothing for AppImage users**: the autostart entry ran `mtsync --daemon`, which isn't on PATH when running from an AppImage. It now points at the `.AppImage` file itself, quoted and escaped as the Desktop Entry spec requires
+- **Defined and enforced a portability baseline**: the AppImage targets Ubuntu 24.04 (glibc 2.39, libstdc++ from GCC 14) and runs on that or any newer distro. glibc and the graphics stack deliberately come from the host, as in every AppImage. A new `packaging/appimage/check-appimage.sh` fails the build if any bundled binary needs a newer glibc/libstdc++ symbol version than 24.04 ships, if a library is neither bundled nor on the host allowlist, or if the bundled rclone is missing. CI also launches the finished AppImage in clean `ubuntu:24.04`, `debian:13` and `fedora:latest` containers
+- **`build.sh --appimage`**: bundles rclone and runs the same check. On a host newer than 24.04 it warns that the result isn't portable, instead of failing. It no longer needs libfuse2: linuxdeploy runs with `APPIMAGE_EXTRACT_AND_RUN=1`. The old libfuse2 check also failed on hosts that had it installed, because `grep -q` under `pipefail` made `ldconfig` exit on SIGPIPE
+
 ## 0.9.21 — Dry Run Preview
 
 - **One-click Dry Run preview in the job dialog**: the New/Edit Job dialog has a new **Dry Run** button before **Run Now**, for Sync, Copy and Move jobs. It simulates the job with the dialog's *current* settings (type, source, destination, include filters, checksum, parallel transfers, per-job and global extra rclone flags). It always runs as a dry run, whatever the **Dry Run** toggle says, and it doesn't save the job. The dialog stays open so you can go straight on to Run Now, or change settings and preview again

@@ -139,7 +139,13 @@ chmod +x mtsync_*_x86_64.AppImage
 ./mtsync_*_x86_64.AppImage
 ```
 
-No installation required — the AppImage is self-contained and runs directly.
+No installation required. The AppImage bundles its own copy of rclone, and always uses it, so rclone
+doesn't need to be installed. It runs on Ubuntu 24.04 or newer, or any distro with glibc 2.39 or later
+(Debian 13+, Fedora 40+, …). The C library and graphics drivers come from the host system, as they do
+for every AppImage. Mount jobs still need FUSE on the host (`fusermount3`).
+
+If you enable **Start daemon on login**, the autostart entry points at the AppImage's current location.
+Re-toggle it after moving the file.
 
 ### From source
 
