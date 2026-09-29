@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.24 — AppImage Built on Ubuntu 22.04
+
+- **The AppImage now runs on Ubuntu 22.04 and newer**: it's built in an `ubuntu:22.04` container instead of on 24.04, so it needs only glibc 2.35 (Ubuntu 22.04+, Debian 12+, Fedora 36+). This is what the AppImage catalog tests against: its runner is `ubuntu-22.04`, where the 0.9.21–0.9.23 AppImages failed to start with `GLIBC_2.38 not found`
+- **GTK stack built from source for the AppImage**: 22.04 ships GTK 4.6 and libadwaita 1.1, and Mt. Sync needs libadwaita 1.5. `packaging/appimage/build-gtk-stack.sh` builds glib 2.80, wayland 1.22, GTK 4.14, libadwaita 1.5, gtkmm 4.14 (with libsigc++, glibmm, cairomm and pangomm) and nlohmann-json 3.11 into `/opt/mtsync-deps`. Every tarball is pinned by SHA256. Everything else (pango, cairo, harfbuzz, libsoup, …) comes from 22.04's own packages. CI caches the result, keyed on the scripts
+- **No libstdc++ dependency**: `std::format` needs GCC 13, whose libstdc++ is newer than 22.04's. The C++ bindings are built as static libraries and the app links libstdc++ statically, so there's exactly one copy, inside the binary, and nothing clashes with the host's libstdc++ that graphics drivers load
+- **New build scripts**: `install-build-deps-jammy.sh` (toolchain: gcc-13 from the toolchain PPA, meson and CMake from pip), `build-gtk-stack.sh` and `build-appimage.sh`, all in `packaging/appimage/`. Both workflows now call these instead of repeating the steps. `check-appimage.sh` now enforces the 22.04 ceilings (GLIBC_2.35, GLIBCXX_3.4.30)
+- **CI tests the AppImage where the catalog does**: a separate job on the `ubuntu-22.04` runner, the catalog's own image, runs the catalog-style firejail + Xvfb launch test. It also smoke-tests the AppImage in clean `ubuntu:22.04`, `debian:12`, `ubuntu:24.04`, `debian:13` and `fedora:latest` containers. A release now waits for these tests
+
 ## 0.9.23 — AppImage Catalog Fixes
 
 - **firejail-aware relaunch**: `firejail --appimage`, which the AppImage catalog uses to test submissions, sets `$APPIMAGE`/`$APPDIR` itself and loop-mounts the image for the sandbox's whole lifetime. Re-running `$APPIMAGE` there would need FUSE inside the sandbox, so `sandbox::self_exe()` detects firejail's `/run/firejail/appimage` mount and uses `/proc/self/exe` instead. CI now reproduces the catalog's launch test: it runs the AppImage under `firejail --noprofile --net=none --appimage` on Xvfb and fails unless a window appears within 30 seconds

@@ -140,9 +140,14 @@ chmod +x mtsync_*_x86_64.AppImage
 ```
 
 No installation required. The AppImage bundles its own copy of rclone, and always uses it, so rclone
-doesn't need to be installed. It runs on Ubuntu 24.04 or newer, or any distro with glibc 2.39 or later
-(Debian 13+, Fedora 40+, …). The C library and graphics drivers come from the host system, as they do
-for every AppImage. Mount jobs still need FUSE on the host (`fusermount3`).
+doesn't need to be installed. It's built on Ubuntu 22.04 and runs on that or anything newer: any distro
+with glibc 2.35 or later (Debian 12+, Fedora 36+, …). The C library and graphics drivers come from the
+host system, as they do for every AppImage. Mount jobs still need FUSE on the host (`fusermount3`).
+
+The AppImage is built by the scripts in [`packaging/appimage/`](packaging/appimage/), inside an
+`ubuntu:22.04` container. 22.04's own GTK is too old for Mt. Sync, so they build GTK 4.14, libadwaita 1.5
+and gtkmm from source first. `./build.sh --appimage` builds with your local toolchain instead, so its
+AppImage only runs on systems at least as new as yours.
 
 If you enable **Start daemon on login**, the autostart entry points at the AppImage's current location.
 Re-toggle it after moving the file.

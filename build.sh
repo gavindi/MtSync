@@ -157,7 +157,7 @@ build_appimage() {
 
     log "Checking AppImage is self-contained"
     packaging/appimage/check-appimage.sh "$dst" \
-        || warn "This AppImage is not portable to the Ubuntu 24.04 baseline. Release AppImages must be built on Ubuntu 24.04 (as CI does)."
+        || warn "This AppImage is not portable to the Ubuntu 22.04 baseline. Portable AppImages are built in ubuntu:22.04 with packaging/appimage/build-appimage.sh (as CI does)."
 }
 
 # ── Flatpak ──────────────────────────────────────────────────────────────────

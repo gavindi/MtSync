@@ -114,59 +114,50 @@ jobs:
           name: rpm
           path: build/*.rpm
 
+  # Built on Ubuntu 22.04, the oldest supported LTS, so it runs on 22.04 and
+  # everything newer. 22.04's GTK stack is too old for Mt. Sync (libadwaita
+  # >= 1.5), so the newer parts are built from source and cached; see
+  # packaging/appimage/.
   appimage:
     needs: check-version
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag }}
 
       - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            cmake g++ pkg-config \
-            libgtkmm-4.0-dev \
-            libadwaita-1-dev \
-            libsoup-3.0-dev \
-            libcairo2-dev \
-            nlohmann-json3-dev \
-            libfuse2 \
-            gettext
+        run: bash packaging/appimage/install-build-deps-jammy.sh
 
-      - name: Configure and build
-        run: |
-          cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr
-          cmake --build build --parallel $(nproc)
+      - name: Restore GTK stack cache
+        uses: actions/cache@v4
+        with:
+          path: /opt/mtsync-deps
+          key: gtk-stack-jammy-${{ hashFiles('packaging/appimage/build-gtk-stack.sh', 'packaging/appimage/install-build-deps-jammy.sh') }}
 
-      - name: Install to AppDir
-        run: DESTDIR=$(pwd)/AppDir cmake --install build
+      - name: Build GTK stack
+        run: bash packaging/appimage/build-gtk-stack.sh
 
-      - name: Bundle rclone
-        run: packaging/appimage/fetch-rclone.sh AppDir
+      - name: Build and check AppImage
+        run: bash packaging/appimage/build-appimage.sh .
 
-      - name: Download linuxdeploy
-        run: |
-          wget -q -O linuxdeploy \
-            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-          wget -q -O linuxdeploy-plugin-gtk.sh \
-            https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh
-          chmod +x linuxdeploy linuxdeploy-plugin-gtk.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: "*.AppImage"
 
-      - name: Create AppImage
-        env:
-          DEPLOY_GTK_VERSION: 4
-          VERSION: ${{ inputs.tag }}
-        run: |
-          ./linuxdeploy \
-            --appdir AppDir \
-            --plugin gtk \
-            --output appimage
-          mv *.AppImage mtsync_${VERSION}_$(uname -m).AppImage
+  appimage-test:
+    needs: appimage
+    # Same runner image as the AppImage catalog's test (appimage.github.io)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: appimage
 
-      - name: Check AppImage is self-contained
-        run: packaging/appimage/check-appimage.sh mtsync_*.AppImage
+      - run: chmod +x ./*.AppImage
 
       # Run it on clean containers that have only the host-provided libraries
       # (see HOST_ALLOWLIST in check-appimage.sh), proving every bundled library
@@ -181,16 +172,19 @@ jobs:
               -e DEBIAN_FRONTEND=noninteractive "$1" bash -ec "$2 && ./mtsync_*.AppImage --help"
             echo "::endgroup::"
           }
+          run ubuntu:22.04  "apt-get update -qq && apt-get install -y -qq $DEB_LIBS >/dev/null"
+          run debian:12     "apt-get update -qq && apt-get install -y -qq $DEB_LIBS >/dev/null"
           run ubuntu:24.04  "apt-get update -qq && apt-get install -y -qq $DEB_LIBS >/dev/null"
           run debian:13     "apt-get update -qq && apt-get install -y -qq $DEB_LIBS >/dev/null"
           run fedora:latest "dnf install -y -q $RPM_LIBS"
 
-      # Reproduce the AppImage catalog's launch test (appimage.github.io): run
-      # under firejail --appimage on a bare X server and expect a window within
-      # 30 s. The catalog fails an AppImage that exits or shows no window.
+      # Reproduce the AppImage catalog's launch test: run under firejail
+      # --appimage on a bare X server and expect a window within 30 s. The
+      # catalog fails an AppImage that exits or shows no window.
       - name: Catalog-style launch test (firejail + Xvfb)
         run: |
-          sudo apt-get install -y firejail xvfb x11-utils
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq firejail xvfb x11-utils
           xvfb-run -a bash -c '
             firejail --quiet --noprofile --net=none --appimage ./mtsync_*.AppImage > launch.log 2>&1 &
             PID=$!
@@ -204,11 +198,6 @@ jobs:
               fi
             done
             echo "::error::No window after 30s"; cat launch.log; kill $PID; exit 1'
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: appimage
-          path: "*.AppImage"
 
   flatpak:
     needs: check-version
@@ -253,7 +242,7 @@ jobs:
           path: "*.snap"
 
   release:
-    needs: [deb, rpm, appimage, flatpak, snap]
+    needs: [deb, rpm, appimage, appimage-test, flatpak, snap]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

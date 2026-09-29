@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# Verify an AppImage is self-contained against the Ubuntu 24.04 baseline:
+# Verify an AppImage is self-contained against the Ubuntu 22.04 baseline:
 #   - every shared library an ELF in the bundle needs is either bundled or on
 #     the host allowlist (libraries every desktop distro provides and which
 #     must come from the host: glibc, the GPU/display stack, fonts),
-#   - nothing needs a glibc / libstdc++ symbol version newer than 24.04 ships,
+#   - nothing needs a glibc / libstdc++ symbol version newer than 22.04 ships,
 #   - the bundled rclone is present and runs.
 #
 # Usage: packaging/appimage/check-appimage.sh <file.AppImage>
 
 set -euo pipefail
 
-MAX_GLIBC="2.39"        # Ubuntu 24.04 glibc
-MAX_GLIBCXX="3.4.33"    # Ubuntu 24.04 libstdc++ (GCC 14)
+MAX_GLIBC="2.35"        # Ubuntu 22.04 glibc
+MAX_GLIBCXX="3.4.30"    # Ubuntu 22.04 libstdc++ (GCC 12)
 
 HOST_ALLOWLIST='^(ld-linux-x86-64\.so\.2|libc\.so\.6|libm\.so\.6|libdl\.so\.2|libpthread\.so\.0|librt\.so\.1|libresolv\.so\.2|libutil\.so\.1|libstdc\+\+\.so\.6|libgcc_s\.so\.1|libGL\.so\.1|libGLX\.so\.0|libOpenGL\.so\.0|libEGL\.so\.1|libGLESv2\.so\.2|libgbm\.so\.1|libdrm\.so\.2|libwayland-client\.so\.0|libX11\.so\.6|libX11-xcb\.so\.1|libxcb\.so\.1|libfontconfig\.so\.1|libfreetype\.so\.6|libharfbuzz\.so\.0|libfribidi\.so\.0|libz\.so\.1|libexpat\.so\.1|libgmp\.so\.10|libgpg-error\.so\.0|libcom_err\.so\.2)$'
 
@@ -46,7 +46,7 @@ max_version() {  # $1 = GLIBC | GLIBCXX
 }
 check_ceiling() {  # $1 = name, $2 = found, $3 = ceiling
     if [[ -n "$2" && "$(printf '%s\n%s\n' "$2" "$3" | sort -V | tail -1)" != "$3" ]]; then
-        echo "FAIL: requires $1_$2, newer than the Ubuntu 24.04 baseline ($1_$3)" >&2
+        echo "FAIL: requires $1_$2, newer than the Ubuntu 22.04 baseline ($1_$3)" >&2
         fail=1
     else
         echo "ok: max $1_${2:-none} (ceiling $3)"
