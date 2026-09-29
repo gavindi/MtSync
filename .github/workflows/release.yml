@@ -185,6 +185,26 @@ jobs:
           run debian:13     "apt-get update -qq && apt-get install -y -qq $DEB_LIBS >/dev/null"
           run fedora:latest "dnf install -y -q $RPM_LIBS"
 
+      # Reproduce the AppImage catalog's launch test (appimage.github.io): run
+      # under firejail --appimage on a bare X server and expect a window within
+      # 30 s. The catalog fails an AppImage that exits or shows no window.
+      - name: Catalog-style launch test (firejail + Xvfb)
+        run: |
+          sudo apt-get install -y firejail xvfb x11-utils
+          xvfb-run -a bash -c '
+            firejail --quiet --noprofile --net=none --appimage ./mtsync_*.AppImage > launch.log 2>&1 &
+            PID=$!
+            for i in $(seq 1 30); do
+              sleep 1
+              if ! kill -0 $PID 2>/dev/null; then
+                echo "::error::AppImage exited within ${i}s instead of showing a window"; cat launch.log; exit 1
+              fi
+              if grep -qE "0x.*\": \(" <<< "$(xwininfo -tree -root 2>/dev/null)"; then
+                echo "Window appeared after ${i}s"; kill $PID; exit 0
+              fi
+            done
+            echo "::error::No window after 30s"; cat launch.log; kill $PID; exit 1'
+
       - uses: actions/upload-artifact@v4
         with:
           name: appimage

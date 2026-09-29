@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.23 — AppImage Catalog Fixes
+
+- **firejail-aware relaunch**: `firejail --appimage`, which the AppImage catalog uses to test submissions, sets `$APPIMAGE`/`$APPDIR` itself and loop-mounts the image for the sandbox's whole lifetime. Re-running `$APPIMAGE` there would need FUSE inside the sandbox, so `sandbox::self_exe()` detects firejail's `/run/firejail/appimage` mount and uses `/proc/self/exe` instead. CI now reproduces the catalog's launch test: it runs the AppImage under `firejail --noprofile --net=none --appimage` on Xvfb and fails unless a window appears within 30 seconds
+
 ## 0.9.22 — Self-Contained AppImage
 
 - **The AppImage now bundles rclone**: a pinned rclone release (v1.75.1, SHA256-verified) is installed into the AppImage's `usr/bin`. When running as an AppImage, Mt. Sync always uses that copy, for both the CLI calls and `rclone rcd`, via a new `sandbox::rclone_program()`. rclone no longer has to be installed on the host. Other packages (deb, rpm, Flatpak, Snap) still use `rclone` from PATH. The AppImage grows from about 38 MB to about 60 MB

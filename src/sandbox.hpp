@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <string>
+#include <string_view>
 
 namespace mtsync::sandbox {
 
@@ -41,12 +42,21 @@ inline bool in_appimage() {
     return std::getenv("APPIMAGE") != nullptr && std::getenv("APPDIR") != nullptr;
 }
 
+// `firejail --appimage` sets $APPIMAGE/$APPDIR itself and loop-mounts the
+// image at /run/firejail/appimage for the sandbox's whole lifetime, no FUSE.
+inline bool in_firejail_appimage() {
+    const char* appdir = std::getenv("APPDIR");
+    return appdir && std::string_view(appdir).starts_with("/run/firejail/appimage");
+}
+
 // Executable to re-launch ourselves with (daemon, GUI). Inside an AppImage,
 // /proc/self/exe points into this process's FUSE mount, which the runtime
 // unmounts as soon as the launching process exits — so a spawned daemon must
-// go through $APPIMAGE to get a mount of its own. Returns "" if not found.
+// go through $APPIMAGE to get a mount of its own. Under firejail the mount
+// outlives us, and re-running $APPIMAGE would need FUSE inside the sandbox,
+// so /proc/self/exe is right there. Returns "" if not found.
 inline std::string self_exe() {
-    if (in_appimage()) return std::getenv("APPIMAGE");
+    if (in_appimage() && !in_firejail_appimage()) return std::getenv("APPIMAGE");
     std::error_code ec;
     // Prefer our own binary so a dev build doesn't launch the installed one
     if (std::filesystem::exists("/proc/self/exe", ec)) return "/proc/self/exe";
