@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.25 — OneDrive Remotes Fixed
+
+- **Fixed: OneDrive remotes couldn't be used**: browsing or syncing a OneDrive remote added in Mt. Sync failed with `unable to get drive_id and drive_type`. Remotes are created with `rclone config create --non-interactive`, and in that mode rclone stops at the backend's first follow-up question and prints it as JSON instead of answering it. Mt. Sync treated that as success, so OneDrive never got as far as choosing the drive, which is the step that writes `drive_id` and `drive_type`. `RcloneCli` now answers each question until rclone reports the config complete (`config update --continue --state … --result …`), taking rclone's default each time, as `rclone config create` does without `--non-interactive`. For OneDrive that's "OneDrive Personal or Business" and the account's own drive. Other OAuth backends with follow-up questions (Google Drive's shared-drive prompt, for example) now also run their config to the end. The token from **Authorize** is kept: "Already have a token - refresh?" is always answered no, and Mt. Sync never lets rclone start its own browser sign-in
+- **Repairing an existing OneDrive remote**: open it from the remotes list and click **Update**. That runs the rest of the config and fills in the missing drive details. No need to delete and re-add it
+- **Save errors are now shown**: if saving a remote fails, the reason is shown above the Save button and the form stays open. Previously the button just did nothing. Saving an OAuth remote that hasn't been authorized now says to click **Authorize** first
+- **Translations**: the new strings are translated in `po/fr.po` and `po/de.po`
+
 ## 0.9.24 — AppImage Built on Ubuntu 22.04
 
 - **The AppImage now runs on Ubuntu 22.04 and newer**: it's built in an `ubuntu:22.04` container instead of on 24.04, so it needs only glibc 2.35 (Ubuntu 22.04+, Debian 12+, Fedora 36+). This is what the AppImage catalog tests against: its runner is `ubuntu-22.04`, where the 0.9.21–0.9.23 AppImages failed to start with `GLIBC_2.38 not found`
