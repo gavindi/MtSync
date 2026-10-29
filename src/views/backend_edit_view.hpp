@@ -88,7 +88,10 @@ private:
     Gtk::Label m_oauth_status;
     Gtk::Spinner m_oauth_spinner;
     std::string m_oauth_token;                           // captured token JSON
-    std::shared_ptr<bool> m_alive = std::make_shared<bool>(true); // authorize callback guard
+    std::shared_ptr<bool> m_alive = std::make_shared<bool>(true); // authorize/save callback guard
+
+    Gtk::Button* m_save_btn = nullptr;
+    Gtk::Label m_save_status;                            // save error, if any
 
     // Dynamic form fields
     struct FormField {

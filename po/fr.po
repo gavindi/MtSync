@@ -4,7 +4,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: MtSync 0.9.24\n"
+"Project-Id-Version: MtSync 0.9.25\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-09-26 09:08+1000\n"
 "PO-Revision-Date: 2026-09-07 10:31+1000\n"
@@ -499,7 +499,9 @@ msgstr "Rien à faire"
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:399
 msgid ""
 "The dry run found no changes to make: the destination is already up to date."
-msgstr "L'essai à blanc n'a trouvé aucune modification à effectuer : la destination est déjà à jour."
+msgstr ""
+"L'essai à blanc n'a trouvé aucune modification à effectuer : la destination "
+"est déjà à jour."
 
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:586
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:594
@@ -587,7 +589,9 @@ msgstr "Essai à blanc terminé. Rien n'a été modifié."
 #, c++-format
 msgid ""
 "Dry run complete. Nothing was changed. If run, this job would affect: {}"
-msgstr "Essai à blanc terminé. Rien n'a été modifié. Si elle était exécutée, cette tâche concernerait : {}"
+msgstr ""
+"Essai à blanc terminé. Rien n'a été modifié. Si elle était exécutée, cette "
+"tâche concernerait : {}"
 
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:924
 #: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:492
@@ -949,13 +953,18 @@ msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:683
 msgid "Dry run preview isn't available for bi-directional sync"
-msgstr "L'aperçu de l'essai à blanc n'est pas disponible pour la synchronisation bidirectionnelle"
+msgstr ""
+"L'aperçu de l'essai à blanc n'est pas disponible pour la synchronisation "
+"bidirectionnelle"
 
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:684
 msgid ""
 "Simulate this job now with the current settings and preview what would "
 "change. Nothing is modified, regardless of the Dry Run toggle."
-msgstr "Simuler cette tâche maintenant avec les paramètres actuels et prévisualiser ce qui changerait. Rien n'est modifié, quelle que soit la position de l'option Essai à blanc."
+msgstr ""
+"Simuler cette tâche maintenant avec les paramètres actuels et prévisualiser "
+"ce qui changerait. Rien n'est modifié, quelle que soit la position de "
+"l'option Essai à blanc."
 
 #: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:62
 msgid "success"
@@ -1452,6 +1461,9 @@ msgstr "Paramètres"
 #: /home/ggraham/Projects/MtSync/src/window.cpp:70
 msgid "About"
 msgstr "À propos"
+
+#~ msgid "Could not save remote: "
+#~ msgstr "Impossible d'enregistrer le distant : "
 
 #~ msgid "Activity Log"
 #~ msgstr "Journal d'activité"

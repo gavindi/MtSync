@@ -89,6 +89,12 @@ public:
     static std::vector<DryRunAction> parse_dry_run_log(const std::string& log);
 
 private:
+    // Answer the backend's follow-up config questions that `config create|update
+    // --non-interactive` printed as JSON in `out`, until rclone reports none left.
+    static constexpr int kMaxConfigSteps = 20;
+    void continue_config(const std::string& name, const std::string& out,
+                         int steps_left, AsyncCallback<std::monostate> callback);
+
     std::string m_rclone_path;
     std::string m_config_path;
 

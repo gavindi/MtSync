@@ -65,6 +65,11 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="0.9.25" date="2026-10-30">
+      <description>
+        <p>Fixes OneDrive remotes failing with "unable to get drive_id and drive_type". To repair an existing OneDrive remote, open it and click Update. Errors when saving a remote are now shown instead of being silently ignored.</p>
+      </description>
+    </release>
     <release version="0.9.24" date="2026-09-30">
       <description>
         <p>The AppImage is now built on Ubuntu 22.04, so it runs on Ubuntu 22.04, Debian 12, Fedora 36 and anything newer.</p>

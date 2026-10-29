@@ -164,12 +164,12 @@ void RcloneCli::config_create(const std::string& name, const std::string& type,
         args.push_back(k + "=" + v);
     args.push_back("--non-interactive");
 
-    run_command(std::move(args), [callback = std::move(callback)](
-        const std::string&, const std::string& err, int code) {
+    run_command(std::move(args), [this, name, callback = std::move(callback)](
+        const std::string& out, const std::string& err, int code) mutable {
         if (code != 0)
             callback(std::unexpected("config create failed: " + err));
         else
-            callback(std::monostate{});
+            continue_config(name, out, kMaxConfigSteps, std::move(callback));
     });
 }
 
@@ -181,13 +181,73 @@ void RcloneCli::config_update(const std::string& name,
         args.push_back(k + "=" + v);
     args.push_back("--non-interactive");
 
-    run_command(std::move(args), [callback = std::move(callback)](
-        const std::string&, const std::string& err, int code) {
+    run_command(std::move(args), [this, name, callback = std::move(callback)](
+        const std::string& out, const std::string& err, int code) mutable {
         if (code != 0)
             callback(std::unexpected("config update failed: " + err));
         else
-            callback(std::monostate{});
+            continue_config(name, out, kMaxConfigSteps, std::move(callback));
     });
+}
+
+void RcloneCli::continue_config(const std::string& name, const std::string& out,
+                                 int steps_left, AsyncCallback<std::monostate> callback) {
+    // With --non-interactive, rclone stops at the backend's first config question
+    // (e.g. OneDrive's drive type and drive selection, which set drive_id/drive_type)
+    // and prints it as JSON: {"State": "...", "Option": {...}, "Error": "..."}.
+    // An empty State means the config is complete.
+    auto j = json::parse(out, nullptr, false);
+    auto str = [](const json& obj, const char* key) -> std::string {
+        auto it = obj.find(key);
+        return it != obj.end() && it->is_string() ? it->get<std::string>() : std::string();
+    };
+    if (j.is_discarded() || !j.is_object() || str(j, "State").empty()) {
+        callback(std::monostate{});
+        return;
+    }
+    if (auto e = str(j, "Error"); !e.empty()) {
+        callback(std::unexpected("config failed: " + e));
+        return;
+    }
+    if (steps_left <= 0) {
+        callback(std::unexpected(std::string("config did not finish")));
+        return;
+    }
+
+    json opt = j.contains("Option") && j["Option"].is_object() ? j["Option"] : json::object();
+    auto opt_name = str(opt, "Name");
+
+    std::string answer;
+    if (opt_name == "config_refresh_token") {
+        // Keep the token we were given (or the one already stored)
+        answer = "false";
+    } else if (opt_name == "config_is_local") {
+        // No token: rclone wants to run its own browser OAuth flow
+        callback(std::unexpected(std::string("this remote needs authorization — click Authorize first")));
+        return;
+    } else {
+        // Take rclone's default, as `rclone config create` does without --non-interactive
+        if (opt.contains("Default")) {
+            const auto& d = opt["Default"];
+            if (d.is_string()) answer = d.get<std::string>();
+            else if (d.is_boolean()) answer = d.get<bool>() ? "true" : "false";
+            else if (!d.is_null()) answer = d.dump();
+        }
+        if (answer.empty() && opt.contains("Examples") && opt["Examples"].is_array()
+            && !opt["Examples"].empty() && opt["Examples"][0].is_object())
+            answer = str(opt["Examples"][0], "Value");
+    }
+
+    run_command({"config", "update", name, "--continue",
+                 "--state", str(j, "State"),
+                 "--result", answer, "--non-interactive"},
+        [this, name, steps_left, callback = std::move(callback)](
+            const std::string& out, const std::string& err, int code) mutable {
+            if (code != 0)
+                callback(std::unexpected("config update failed: " + err));
+            else
+                continue_config(name, out, steps_left - 1, std::move(callback));
+        });
 }
 
 void RcloneCli::config_delete(const std::string& name, AsyncCallback<std::monostate> callback) {

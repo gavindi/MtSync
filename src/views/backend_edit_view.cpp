@@ -239,11 +239,16 @@ void BackendEditView::setup_ui() {
     btn_box->set_halign(Gtk::Align::CENTER);
     btn_box->set_margin_top(12);
 
-    auto* save_btn = Gtk::make_managed<Gtk::Button>(m_editing ? _("Update") : _("Save"));
-    save_btn->add_css_class("suggested-action");
-    save_btn->set_tooltip_text(_("Save the remote configuration and return to the remotes list"));
-    save_btn->signal_clicked().connect(sigc::mem_fun(*this, &BackendEditView::on_save));
-    btn_box->append(*save_btn);
+    m_save_status.set_wrap(true);
+    m_save_status.add_css_class("error");
+    m_save_status.set_visible(false);
+    vbox->append(m_save_status);
+
+    m_save_btn = Gtk::make_managed<Gtk::Button>(m_editing ? _("Update") : _("Save"));
+    m_save_btn->add_css_class("suggested-action");
+    m_save_btn->set_tooltip_text(_("Save the remote configuration and return to the remotes list"));
+    m_save_btn->signal_clicked().connect(sigc::mem_fun(*this, &BackendEditView::on_save));
+    btn_box->append(*m_save_btn);
 
     auto* cancel_btn = Gtk::make_managed<Gtk::Button>(_("Cancel"));
     cancel_btn->set_tooltip_text(_("Discard all unsaved changes and return to the remotes list"));
@@ -486,8 +491,18 @@ void BackendEditView::on_save() {
     std::string provider_type = m_providers[idx].prefix.empty()
         ? m_providers[idx].name : m_providers[idx].prefix;
 
-    auto callback = [this](auto result) {
-        if (result.has_value() && m_on_done) m_on_done();
+    m_save_btn->set_sensitive(false);
+    m_save_status.set_visible(false);
+
+    auto callback = [this, weak_alive = std::weak_ptr<bool>(m_alive)](auto result) {
+        if (weak_alive.expired()) return;
+        m_save_btn->set_sensitive(true);
+        if (result.has_value()) {
+            if (m_on_done) m_on_done();
+        } else {
+            m_save_status.set_text(std::string(_("Could not save remote: ")) + result.error());
+            m_save_status.set_visible(true);
+        }
     };
 
     if (m_editing) {
