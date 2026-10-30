@@ -23,6 +23,9 @@
 #include <glibmm/i18n.h>
 #include <glibmm/markup.h>
 #include <unordered_map>
+#include <optional>
+#include <vector>
+#include <giomm.h>
 
 namespace mtsync {
 
@@ -45,6 +48,53 @@ static bool get_bool_prop(GObject* obj, const char* prop) {
     gboolean v = FALSE;
     g_object_get(obj, prop, &v, nullptr);
     return static_cast<bool>(v);
+}
+
+// Native listing of a local directory, used when `rclone lsjson` fails.
+// lsjson aborts the whole listing if a single entry can't be lstat()ed, so we list
+// natively and flag entries that can't be stat()ed as `unreadable`.
+// Returns std::nullopt if the directory itself can't be enumerated.
+static std::optional<std::vector<rclone::FileEntry>> list_local_directory(const std::string& path) {
+    try {
+        auto dir = Gio::File::create_for_path(path);
+        // Ask only for the name: without further attributes the enumerator doesn't stat()
+        // each child, so entries we can't stat() still show up instead of being dropped.
+        auto enumerator = dir->enumerate_children("standard::name");
+        std::vector<rclone::FileEntry> entries;
+        while (auto info = enumerator->next_file()) {
+            rclone::FileEntry fe;
+            fe.name = info->get_name();
+            fe.path = fe.name;
+            try {
+                // fast-content-type is name-based; it never opens the file.
+                auto child_info = dir->get_child(fe.name)->query_info(
+                    "standard::type,standard::size,standard::fast-content-type,time::modified");
+                fe.is_dir    = child_info->get_file_type() == Gio::FileType::DIRECTORY;
+                fe.size      = fe.is_dir ? 0 : static_cast<int64_t>(child_info->get_size());
+                fe.mime_type = child_info->get_attribute_string("standard::fast-content-type");
+                auto mtime   = child_info->get_modification_date_time();
+                if (mtime) fe.mod_time = mtime.format_iso8601();
+            } catch (const Glib::Error&) {
+                fe.unreadable = true;
+            }
+            entries.push_back(std::move(fe));
+        }
+        return entries;
+    } catch (const Glib::Error&) {
+        return std::nullopt;
+    }
+}
+
+// Greyed-out, non-interactive presentation for entries that couldn't be stat()ed.
+// Rows are recycled, so this must also undo the state for readable entries.
+static void apply_unreadable_state(const Glib::RefPtr<Gtk::ListItem>& item, bool unreadable) {
+    item->set_selectable(!unreadable);
+    item->set_activatable(!unreadable);
+    if (auto* child = item->get_child()) {
+        child->set_sensitive(!unreadable);
+        child->set_tooltip_text(unreadable
+            ? _("Can't be read: permission denied or unavailable") : "");
+    }
 }
 
 static void set_remote_icon(Gtk::Image* img, const std::string& type) {
@@ -309,10 +359,12 @@ void BrowserPane::build_column_view() {
         if (!obj) return;
         auto* icon  = static_cast<Gtk::Image*>(g_object_get_data(G_OBJECT(item->gobj()), "bp-icon"));
         auto* label = static_cast<Gtk::Label*>(g_object_get_data(G_OBJECT(item->gobj()), "bp-label"));
+        const bool unreadable = obj->property_unreadable.get_value();
         if (icon) {
             std::string mime = std::string(obj->property_mime_type.get_value());
             bool is_dir = obj->property_is_dir.get_value();
-            icon->set_from_icon_name(mime_to_icon(mime, is_dir));
+            icon->set_from_icon_name(unreadable ? std::string("action-unavailable-symbolic")
+                                                : mime_to_icon(mime, is_dir));
             const char* new_cls = mime_to_css_class(mime, is_dir);
             const char* old_cls = static_cast<const char*>(
                 g_object_get_data(G_OBJECT(icon->gobj()), "bp-css"));
@@ -324,6 +376,7 @@ void BrowserPane::build_column_view() {
             }
         }
         if (label) label->set_text(obj->property_name.get_value());
+        apply_unreadable_state(item, unreadable);
     });
     auto name_col = Gtk::ColumnViewColumn::create(_("Name"), name_factory);
     name_col->set_expand(true);
@@ -346,8 +399,10 @@ void BrowserPane::build_column_view() {
         if (!obj) return;
         auto* label = dynamic_cast<Gtk::Label*>(item->get_child());
         if (!label) return;
-        label->set_text(obj->property_is_dir.get_value()
-            ? "--" : format_size(obj->property_size.get_value()));
+        const bool unreadable = obj->property_unreadable.get_value();
+            label->set_text(unreadable || obj->property_is_dir.get_value()
+                ? "--" : format_size(obj->property_size.get_value()));
+            apply_unreadable_state(item, unreadable);
     });
     auto size_col = Gtk::ColumnViewColumn::create(_("Size"), size_factory);
     size_col->set_fixed_width(100);
@@ -461,31 +516,45 @@ void BrowserPane::navigate(const std::string& path) {
     rebuild_breadcrumbs();
 
     std::string rclone_path = m_is_local ? path : (m_current_remote + ":" + path);
-    m_manager.cli().lsjson(rclone_path, [this, gen](auto result) {
+        m_manager.cli().lsjson(rclone_path, [this, gen, path](auto result) {
         if (gen != m_load_generation) return;
-        if (!result.has_value()) {
-            if (m_status_label) m_status_label->set_text("");
-            if (m_is_local) {
-                adw::status_page_set_icon_name(m_error_status, "dialog-error-symbolic");
-                adw::status_page_set_title(m_error_status, _("Unable to Read Directory"));
-            } else {
-                adw::status_page_set_icon_name(m_error_status, "network-error-symbolic");
-                adw::status_page_set_title(m_error_status, _("Unable to Connect"));
+
+        std::vector<rclone::FileEntry> entries;
+        if (result.has_value()) {
+            entries = std::move(result.value());
+        } else {
+            // rclone gives up on the whole directory if one entry can't be stat()ed
+            // (e.g. permission denied on a FUSE mount). For local paths, retry natively so
+            // the readable entries are still listed and the offending ones are greyed out.
+            std::optional<std::vector<rclone::FileEntry>> local;
+            if (m_is_local) local = list_local_directory(path);
+            if (!local) {
+                if (m_status_label) m_status_label->set_text("");
+                if (m_is_local) {
+                    adw::status_page_set_icon_name(m_error_status, "dialog-error-symbolic");
+                    adw::status_page_set_title(m_error_status, _("Unable to Read Directory"));
+                } else {
+                    adw::status_page_set_icon_name(m_error_status, "network-error-symbolic");
+                    adw::status_page_set_title(m_error_status, _("Unable to Connect"));
+                }
+                adw::status_page_set_description(m_error_status,
+                    Glib::Markup::escape_text(result.error()).c_str());
+                show_content_state("error");
+                return;
             }
-            adw::status_page_set_description(m_error_status,
-                Glib::Markup::escape_text(result.error()).c_str());
-            show_content_state("error");
-            return;
+            entries = std::move(*local);
         }
+
         m_list_store->remove_all();
-        int file_count = 0, folder_count = 0;
+        int file_count = 0, folder_count = 0, unreadable_count = 0;
         int64_t total_size = 0;
-        for (auto& e : result.value()) {
+        for (auto& e : entries) {
             if (!m_show_hidden && !e.name.empty() && e.name[0] == '.')
                 continue;
             m_list_store->append(FileObject::create(e));
-            if (e.is_dir) { ++folder_count; }
-            else          { ++file_count; total_size += e.size; }
+            if (e.unreadable) { ++unreadable_count; }
+            else if (e.is_dir) { ++folder_count; }
+            else               { ++file_count; total_size += e.size; }
         }
         if (m_status_label) {
             auto size_str = format_size(total_size);
@@ -493,10 +562,15 @@ void BrowserPane::navigate(const std::string& path) {
                 std::make_format_args(file_count));
             auto folders_str = std::vformat(ngettext("{} folder", "{} folders", folder_count),
                 std::make_format_args(folder_count));
-            m_status_label->set_text(std::format(
-                "{}, {}, {}: {}", files_str, folders_str, _("Total"), size_str));
+            auto status = std::format(
+                "{}, {}, {}: {}", files_str, folders_str, _("Total"), size_str);
+            if (unreadable_count > 0)
+                status += std::format(", {}", std::vformat(
+                    ngettext("{} inaccessible", "{} inaccessible", unreadable_count),
+                    std::make_format_args(unreadable_count)));
+            m_status_label->set_text(status);
         }
-        show_content_state(result.value().empty() ? "empty" : "files");
+        show_content_state(entries.empty() ? "empty" : "files");
     });
 }
 
@@ -568,7 +642,7 @@ void BrowserPane::rebuild_breadcrumbs() {
 void BrowserPane::on_item_activated(guint position) {
     signal_focused.emit();
     auto obj = std::dynamic_pointer_cast<FileObject>(m_sort_model->get_object(position));
-    if (!obj || !obj->property_is_dir.get_value()) return;
+    if (!obj || obj->property_unreadable.get_value() || !obj->property_is_dir.get_value()) return;
     m_path_history.push_back(m_current_path);
     std::string new_path;
     if (m_is_local) {
@@ -657,7 +731,8 @@ std::vector<Glib::RefPtr<FileObject>> BrowserPane::get_selected_files() const {
     for (guint i = 0; i < n; ++i) {
         if (m_file_selection->is_selected(i)) {
             auto obj = std::dynamic_pointer_cast<FileObject>(m_sort_model->get_object(i));
-            if (obj) result.push_back(std::move(obj));
+            // Unreadable entries are shown disabled; never hand them to copy/delete/etc.
+            if (obj && !obj->property_unreadable.get_value()) result.push_back(std::move(obj));
         }
     }
     return result;
