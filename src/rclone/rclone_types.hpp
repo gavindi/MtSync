@@ -70,6 +70,7 @@ struct FileEntry {
     std::string mod_time;
     std::string mime_type;
     bool is_dir = false;
+    bool unreadable = false; // entry exists but couldn't be stat()ed (e.g. permission denied)
 };
 
 // One line of output from `rclone check --combined -`

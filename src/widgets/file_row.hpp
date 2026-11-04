@@ -46,6 +46,7 @@ public:
     Glib::Property<Glib::ustring> property_mod_time{*this, "mod-time"};
     Glib::Property<Glib::ustring> property_mime_type{*this, "mime-type"};
     Glib::Property<bool> property_is_dir{*this, "is-dir"};
+    Glib::Property<bool> property_unreadable{*this, "unreadable"};
 
 protected:
     FileObject();

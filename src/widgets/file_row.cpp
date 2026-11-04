@@ -39,6 +39,7 @@ Glib::RefPtr<FileObject> FileObject::create(const rclone::FileEntry& entry) {
     obj->property_mod_time.set_value(entry.mod_time);
     obj->property_mime_type.set_value(entry.mime_type);
     obj->property_is_dir.set_value(entry.is_dir);
+    obj->property_unreadable.set_value(entry.unreadable);
     return obj;
 }
 
