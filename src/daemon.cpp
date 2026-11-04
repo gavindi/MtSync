@@ -19,6 +19,7 @@
 #include "daemon.hpp"
 #include "log/activity_log.hpp"
 #include "rclone/cron_utils.hpp"
+#include "rclone/error_hints.hpp"
 #include "ipc/protocol.hpp"
 #include "settings.hpp"
 #include "sandbox.hpp"
@@ -112,6 +113,8 @@ static std::string write_error_log(const rclone::Job& job, const std::string& er
       << "Source:      " << job.source         << "\n"
       << "Destination: " << job.destination    << "\n"
       << "\nError:\n"    << error_msg          << "\n";
+    if (auto hint = rclone::error_hint(error_msg); !hint.empty())
+        f << "\nHint:\n" << hint << "\n";
 
     return f.good() ? path.string() : "";
 }

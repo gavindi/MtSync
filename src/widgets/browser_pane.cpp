@@ -18,6 +18,7 @@
 
 #include "widgets/browser_pane.hpp"
 #include "sandbox.hpp"
+#include "rclone/error_hints.hpp"
 #include <adwaita.h>
 #include <format>
 #include <glibmm/i18n.h>
@@ -537,8 +538,11 @@ void BrowserPane::navigate(const std::string& path) {
                     adw::status_page_set_icon_name(m_error_status, "network-error-symbolic");
                     adw::status_page_set_title(m_error_status, _("Unable to Connect"));
                 }
+                std::string description = result.error();
+                if (auto hint = rclone::error_hint(result.error()); !hint.empty())
+                    description = hint + "\n\n" + description;
                 adw::status_page_set_description(m_error_status,
-                    Glib::Markup::escape_text(result.error()).c_str());
+                    Glib::Markup::escape_text(description).c_str());
                 show_content_state("error");
                 return;
             }

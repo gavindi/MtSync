@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-05 05:16+1000\n"
+"POT-Creation-Date: 2026-11-05 07:58+1000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,23 +18,23 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:139
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:142
 msgid "Mt. Sync - rclone GUI"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:548
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:551
 msgid "Job Started"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:934
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:937
 msgid "Sync Complete"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:937
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:940
 msgid "Sync Failed"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:1004
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:1007
 msgid "Watch Setup Failed"
 msgstr ""
 
@@ -53,6 +53,15 @@ msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/main.cpp:41
 msgid "  --help, -h      Show this help\n"
+msgstr ""
+
+#: /home/ggraham/Projects/MtSync/src/rclone/error_hints.cpp:41
+msgid ""
+"Google Drive is limiting requests from rclone's built-in client ID, which is "
+"shared by all rclone users. Try again later, or use your own client ID: "
+"create one as described at https://rclone.org/drive/#making-your-own-client-"
+"id, then open this remote under Remotes, enter the client_id and "
+"client_secret, click Authorize, and click Update."
 msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/tray.cpp:204
@@ -105,7 +114,7 @@ msgid "Remote Settings"
 msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:86
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:381
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:382
 msgid "Name"
 msgstr ""
 
@@ -471,13 +480,13 @@ msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:590
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:598
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:407
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:408
 msgid "Size"
 msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:591
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:599
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:432
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:433
 msgid "Modified"
 msgstr ""
 
@@ -553,7 +562,7 @@ msgid ""
 msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:927
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:561
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:565
 #, c++-format
 msgid "{} file"
 msgid_plural "{} files"
@@ -1322,79 +1331,79 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:96
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:97
 msgid "Can't be read: permission denied or unavailable"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:165
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:166
 msgid "No Remote Selected"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:166
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:167
 msgid "Choose a remote from the dropdown above."
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:180
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:181
 msgid "Empty Folder"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:181
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:182
 msgid "This directory contains no files."
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:186
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:538
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:187
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:539
 msgid "Unable to Connect"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:187
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:188
 msgid "The remote did not respond. Check the connection and try again."
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:212
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:213
 msgid "Show hidden files"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:282
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:581
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:283
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:585
 msgid "Local"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:295
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:296
 msgid "Navigate back to the previous directory in history"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:302
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:303
 msgid "Navigate up to the parent directory"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:318
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:319
 msgid "Reload the current directory listing from the remote"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:535
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:536
 msgid "Unable to Read Directory"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:563
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:567
 #, c++-format
 msgid "{} folder"
 msgid_plural "{} folders"
 msgstr[0] ""
 msgstr[1] ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:566
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:570
 msgid "Total"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:569
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:573
 #, c++-format
 msgid "{} inaccessible"
 msgid_plural "{} inaccessible"
 msgstr[0] ""
 msgstr[1] ""
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:582
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:586
 msgid "Remote"
 msgstr ""
 

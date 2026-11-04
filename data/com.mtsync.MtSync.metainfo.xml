@@ -65,6 +65,11 @@
   <content_rating type="oars-1.1" />
 
   <releases>
+    <release version="0.9.27" date="2026-11-05">
+      <description>
+        <p>Google Drive "Quota exceeded" (rateLimitExceeded) errors now come with a hint: the remote is using rclone's shared built-in client ID. Try again later, or enter your own client ID and secret on the remote, then Authorize and Update. The User Manual explains how.</p>
+      </description>
+    </release>
     <release version="0.9.26" date="2026-11-05">
       <description>
         <p>Activity Log management: select and delete individual entries, and automatically remove entries and error logs older than a configurable number of days. Also fixes Browse listings when a directory contains an unreadable entry, such as a .dislocker directory.</p>

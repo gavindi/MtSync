@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.27 — Google Drive Rate-Limit Hint
+
+- **Hint for Google Drive "Quota exceeded" errors**: Google Drive remotes that use rclone's built-in client ID share one per-minute request quota with every other rclone user. When that quota runs out, Browse and sync fail with `Error 403: Quota exceeded ... project_number:202264815644 ... rateLimitExceeded`. Mt. Sync now recognizes this error and shows a hint above it on the Browse tab: try again later, or create your own client ID and enter it on the remote, then **Authorize** and **Update**. The hint is also added to the job's error log, which opens when you double-click the entry in the Activity Log. The check is in a new `rclone::error_hint()` helper (`src/rclone/error_hints.cpp`), so hints for other errors can be added in one place
+- **User Manual**: new "Google Drive: Using Your Own Client ID" section. Step 5 of "Adding a Remote" now names the **Authorize** button correctly; it said "OAuth Login"
+- **Translations**: the new hint is translated in `po/fr.po` and `po/de.po`
+
 ## 0.9.26 — Activity Log Management
 
 - **Delete activity log entries**: rows in the Jobs tab's Activity Log are now selectable — click for one row, Ctrl-click or Shift-click for several. A trash button at the right end of the "Activity log (Double click for details)" line deletes the selection after a confirmation prompt. Error log files linked to deleted entries are removed as well; double-click details are unchanged

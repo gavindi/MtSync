@@ -27,9 +27,19 @@ A *remote* is a named connection to a storage service — Google Drive, an SFTP 
    - **Object storage:** Amazon S3, Backblaze B2, Azure Blob, Cloudflare R2, Wasabi, and others
    - **Network protocols:** SFTP, FTP, SMB (Windows shares)
 4. Fill in the fields that appear for your chosen provider (server address, API keys, bucket name, etc.)
-5. **OAuth providers** (Google Drive, Dropbox, OneDrive, etc.) show an **OAuth Login** button — click it and complete the sign-in in your browser
+5. **OAuth providers** (Google Drive, Dropbox, OneDrive, etc.) show an **Authorize** button — click it and complete the sign-in in your browser
 6. Expand **Advanced Options** if you need to configure less common settings
 7. Click **Save** — the remote appears in the list with its storage usage shown below the name
+
+### Google Drive: Using Your Own Client ID
+
+By default, Google Drive remotes sign in through rclone's built-in client ID. Every rclone user who hasn't set up their own shares that client ID's request quota, so when Google is busy, browsing or syncing can fail with an error like `Error 403: Quota exceeded ... project_number:202264815644 ... rateLimitExceeded`. Mt. Sync then shows a hint above the error. Trying again later often works. For a lasting fix, use your own client ID:
+
+1. Create a Google OAuth client ID and secret by following rclone's guide: [Making your own client_id](https://rclone.org/drive/#making-your-own-client-id)
+2. Open the remote from the Backends tab (or start a new Google Drive remote)
+3. Enter the values in the **client_id** and **client_secret** fields
+4. Click **Authorize** and sign in again. The sign-in is tied to the client ID, so you have to authorize again after changing it
+5. Click **Update** (or **Save** for a new remote)
 
 ### Editing or Deleting a Remote
 
