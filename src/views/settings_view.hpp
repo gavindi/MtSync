@@ -49,6 +49,8 @@ private:
     Gtk::Widget* m_notify_start_row      = nullptr;
     Gtk::Widget* m_notify_completion_row = nullptr;
     Gtk::Widget* m_notify_errors_row     = nullptr;
+    // Activity log
+    Gtk::Widget* m_log_retention_row     = nullptr;
 
     // Signal handler IDs for clean disconnect in destructor
     gulong m_sig_autostart       = 0;
@@ -65,6 +67,7 @@ private:
     gulong m_sig_notify_start     = 0;
     gulong m_sig_notify_completion= 0;
     gulong m_sig_notify_errors    = 0;
+    gulong m_sig_log_retention    = 0;
 
     void setup_ui();
     void save();

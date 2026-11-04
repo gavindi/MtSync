@@ -257,6 +257,10 @@ Click the **chevron** button on any row to expand it and see the full source/des
 
 Below the job list, the Activity Log records every job execution with a timestamp, result (STARTED, COMPLETED, SKIPPED, RETRYING), job type, and a details message. The most recent 100 entries are shown. A run started by [Watch Mode](#6-watch-mode-react-to-file-changes) is marked `(triggered by file watch)` in its STARTED entry.
 
+Click a row to select it, and use Ctrl-click or Shift-click to select several rows. The trash button at the right end of the "Activity log (Double click for details)" line deletes the selected entries. Mt. Sync asks for confirmation first, and any error log file linked to a deleted entry is deleted too. Double-clicking a row still opens its details.
+
+Older entries can also be removed automatically — see **Settings → Activity Log** below.
+
 ---
 
 ## 8. Settings
@@ -291,6 +295,14 @@ These are the defaults applied to all new jobs. Individual jobs can override the
 | **Retries on failure** | Default number of retry attempts for failed files |
 | **Watch mode debounce (ms)** | Default quiet period after the last detected file change before a [Watch Mode](#6-watch-mode-react-to-file-changes) job runs |
 | **Watch mode max wait (ms)** | Default upper bound on how long continuous file activity can postpone a Watch Mode run |
+
+### Activity Log
+
+| Setting | Description |
+|---------|-------------|
+| **Delete entries older than (days)** | Automatically delete activity log entries and their linked error log files once they are older than this many days. Enter `0` to keep everything |
+
+Retention is applied when the daemon starts, once a day while it runs, and immediately when you change the value. Deleting log history does not affect your jobs or transferred files.
 
 ### rclone
 

@@ -55,6 +55,8 @@ private:
     Gtk::ScrolledWindow                        m_log_scroll;
     Gtk::ColumnView*                           m_log_column_view = nullptr;
     Glib::RefPtr<Gio::ListStore<LogEntry>>     m_log_store;
+    Glib::RefPtr<Gtk::MultiSelection>          m_log_selection;
+    Gtk::Button*                               m_log_delete_btn = nullptr;
 
     std::vector<rclone::Job> m_jobs;
     std::string              m_config_path;
@@ -91,6 +93,9 @@ private:
     void on_delete_job(size_t index);
     void refresh_log();
     void on_log_row_activated(guint position);
+    void on_delete_log_entries();
+    void delete_selected_log_entries();
+    void update_log_delete_button();
     std::string format_speed(double bytes_per_sec);
     void on_daemon_message(const nlohmann::json& msg);
 };

@@ -19,6 +19,7 @@
 #include "views/job_view.hpp"
 #include "views/job_edit_dialog.hpp"
 #include "views/log_view_dialog.hpp"
+#include "log/activity_log.hpp"
 #include "rclone/cron_utils.hpp"
 #include "widgets/adw_wrapper.hpp"
 #include <glibmm/i18n.h>
@@ -29,6 +30,7 @@
 #include <deque>
 #include <format>
 #include <regex>
+#include <string_view>
 
 namespace mtsync {
 
@@ -138,19 +140,38 @@ JobView::JobView(rclone::RcloneManager& manager, DaemonProxy* daemon_proxy)
     // Log section
     auto* log_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
 
+    auto* log_header_row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+    log_header_row->set_margin_start(12);
+    log_header_row->set_margin_end(6);
+    log_header_row->set_margin_top(6);
+    log_header_row->set_margin_bottom(4);
+
     auto* log_header = Gtk::make_managed<Gtk::Label>(_("Activity log (Double click for details)"));
     log_header->set_halign(Gtk::Align::START);
+    log_header->set_hexpand(true);
     log_header->add_css_class("caption");
     log_header->add_css_class("dim-label");
-    log_header->set_margin_start(12);
-    log_header->set_margin_top(6);
-    log_header->set_margin_bottom(4);
-    log_box->append(*log_header);
+    log_header_row->append(*log_header);
+
+    m_log_delete_btn = Gtk::make_managed<Gtk::Button>();
+    m_log_delete_btn->set_icon_name("user-trash-symbolic");
+    m_log_delete_btn->set_valign(Gtk::Align::CENTER);
+    m_log_delete_btn->add_css_class("flat");
+    m_log_delete_btn->add_css_class("destructive-action");
+    m_log_delete_btn->set_sensitive(false);
+    m_log_delete_btn->set_tooltip_text(_("Delete the selected activity log entries"));
+    m_log_delete_btn->signal_clicked().connect(
+        sigc::mem_fun(*this, &JobView::on_delete_log_entries));
+    log_header_row->append(*m_log_delete_btn);
+
+    log_box->append(*log_header_row);
 
     m_log_store = Gio::ListStore<LogEntry>::create();
-    auto no_sel = Gtk::NoSelection::create(m_log_store);
+    m_log_selection = Gtk::MultiSelection::create(m_log_store);
+    m_log_selection->signal_selection_changed().connect(
+        [this](guint, guint) { update_log_delete_button(); });
 
-    m_log_column_view = Gtk::make_managed<Gtk::ColumnView>(no_sel);
+    m_log_column_view = Gtk::make_managed<Gtk::ColumnView>(m_log_selection);
     m_log_column_view->add_css_class("data-table");
     m_log_column_view->add_css_class("job-log");
     m_log_column_view->set_show_row_separators(true);
@@ -800,11 +821,13 @@ void JobView::refresh_log() {
                 raw_contents = raw_contents.substr(0, sep);
             }
             m_log_store->append(LogEntry::create(
-                m[1].str(), m[2].str(), m[3].str(), m[4].str(), raw_contents, log_path));
+                m[1].str(), m[2].str(), m[3].str(), m[4].str(), raw_contents, log_path, *it));
         } else if (!it->empty()) {
-            m_log_store->append(LogEntry::create("", "", "", "", *it));
+            m_log_store->append(LogEntry::create("", "", "", "", *it, "", *it));
         }
     }
+
+    update_log_delete_button();
 
     // Scroll to top (newest entry)
     auto vadj = m_log_scroll.get_vadjustment();
@@ -820,6 +843,93 @@ void JobView::on_log_row_activated(guint position) {
     m_log_dialog = std::make_unique<LogViewDialog>(entry);
     if (toplevel) m_log_dialog->set_transient_for(*toplevel);
     m_log_dialog->present();
+}
+
+void JobView::update_log_delete_button() {
+    if (!m_log_delete_btn || !m_log_selection) return;
+    auto selection = m_log_selection->get_selection();
+    guint64 count = selection ? selection->get_size() : 0;
+    m_log_delete_btn->set_sensitive(count > 0);
+
+    if (count == 0) {
+        m_log_delete_btn->set_tooltip_text(_("Delete the selected activity log entries"));
+        return;
+    }
+    auto* text = g_strdup_printf(
+        ngettext("Delete %u selected activity log entry",
+                 "Delete %u selected activity log entries",
+                 static_cast<unsigned long>(count)),
+        static_cast<unsigned>(count));
+    m_log_delete_btn->set_tooltip_text(text);
+    g_free(text);
+}
+
+void JobView::on_delete_log_entries() {
+    if (!m_log_selection) return;
+    auto selection = m_log_selection->get_selection();
+    if (!selection || selection->is_empty()) return;
+
+    unsigned count = 0;
+    for (guint position : *selection) {
+        if (position < m_log_store->get_n_items())
+            ++count;
+    }
+    if (count == 0) return;
+
+    auto* body = g_strdup_printf(
+        ngettext("The selected log entry will be permanently removed from the activity log. Any linked error log file is deleted too.",
+                 "%u selected log entries will be permanently removed from the activity log. Any linked error log files are deleted too.",
+                 count),
+        count);
+
+    auto* dlg = ADW_ALERT_DIALOG(adw_alert_dialog_new(
+        _("Delete Log Entries?"), body));
+    g_free(body);
+    adw_alert_dialog_add_response(dlg, "cancel", _("Cancel"));
+    adw_alert_dialog_add_response(dlg, "delete", _("Delete"));
+    adw_alert_dialog_set_response_appearance(dlg, "delete", ADW_RESPONSE_DESTRUCTIVE);
+    adw_alert_dialog_set_default_response(dlg, "cancel");
+    adw_alert_dialog_set_close_response(dlg, "cancel");
+
+    g_signal_connect(dlg, "response",
+        G_CALLBACK(+[](AdwAlertDialog*, const char* response, gpointer data) {
+            if (std::string_view(response) == "delete")
+                static_cast<JobView*>(data)->delete_selected_log_entries();
+        }), this);
+
+    if (auto* root = get_root())
+        adw_dialog_present(ADW_DIALOG(dlg), GTK_WIDGET(root->gobj()));
+}
+
+void JobView::delete_selected_log_entries() {
+    if (!m_log_selection) return;
+    auto selection = m_log_selection->get_selection();
+    if (!selection || selection->is_empty()) return;
+
+    std::vector<activity_log::EntryToDelete> entries;
+    for (guint position : *selection) {
+        if (position >= m_log_store->get_n_items()) continue;
+        auto obj = std::dynamic_pointer_cast<LogEntry>(m_log_store->get_object(position));
+        if (!obj) continue;
+        entries.push_back({
+            std::string(obj->property_raw_line.get_value()),
+            std::string(obj->property_log_path.get_value()),
+        });
+    }
+    if (entries.empty()) return;
+
+    if (!activity_log::delete_entries(entries)) {
+        auto* dlg = ADW_ALERT_DIALOG(adw_alert_dialog_new(
+            _("Could Not Update the Activity Log"),
+            _("The activity log file could not be rewritten, so the selected entries were not deleted.")));
+        adw_alert_dialog_add_response(dlg, "close", _("Close"));
+        adw_alert_dialog_set_default_response(dlg, "close");
+        adw_alert_dialog_set_close_response(dlg, "close");
+        if (auto* root = get_root())
+            adw_dialog_present(ADW_DIALOG(dlg), GTK_WIDGET(root->gobj()));
+    }
+
+    refresh_log();
 }
 
 void JobView::on_daemon_message(const nlohmann::json& msg) {

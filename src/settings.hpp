@@ -45,6 +45,8 @@ struct Settings {
     bool        notify_on_start       = false;
     bool        notify_on_completion  = false;
     bool        notify_on_errors      = true;
+    // Activity log
+    int         activity_log_retention_days = 30;  // 0 = keep forever
     // Onboarding
     bool        show_welcome_on_startup = true;
 };
@@ -55,6 +57,7 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE_WITH_DEFAULT(Settings,
     watch_debounce_ms, watch_max_wait_ms,
     rclone_path, global_rclone_flags,
     notify_on_start, notify_on_completion, notify_on_errors,
+    activity_log_retention_days,
     show_welcome_on_startup)
 
 inline std::filesystem::path settings_file_path() {

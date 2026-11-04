@@ -89,6 +89,7 @@ private:
     int m_running_job_count = 0;
 
     sigc::connection m_mount_health_timer;
+    sigc::connection m_log_prune_timer;
 
     void update_tray_animation();
 

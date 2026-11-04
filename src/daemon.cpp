@@ -17,6 +17,7 @@
  */
 
 #include "daemon.hpp"
+#include "log/activity_log.hpp"
 #include "rclone/cron_utils.hpp"
 #include "ipc/protocol.hpp"
 #include "settings.hpp"
@@ -81,15 +82,6 @@ std::string format_duration(double seconds) {
     return std::format("{}h {}m {}s", hrs, rem_mins, secs);
 }
 
-void append_log(const std::string& line) {
-    auto dir = fs::path(g_get_user_state_dir()) / "mtsync";
-    fs::create_directories(dir);
-    std::ofstream f(dir / "mtsync.log", std::ios::app);
-    if (!f) return;
-    auto ts = Glib::DateTime::create_now_local().format("%Y-%m-%d %H:%M:%S");
-    f << "[" << ts.raw() << "] " << line << "\n";
-}
-
 static std::string sanitize_filename(const std::string& s) {
     std::string out;
     for (unsigned char c : s)
@@ -134,6 +126,14 @@ MtSyncDaemon::MtSyncDaemon() {
     m_config_path = (config_dir / "jobs.json").string();
 
     load_jobs();
+
+    // Apply the activity log retention setting once at startup, then daily.
+    activity_log::prune(load_settings().activity_log_retention_days);
+    m_log_prune_timer = Glib::signal_timeout().connect([this]() -> bool {
+        if (!m_running) return false;
+        activity_log::prune(load_settings().activity_log_retention_days);
+        return true;
+    }, 24 * 60 * 60 * 1000);
 
     m_tray = std::make_unique<TrayIcon>();
     m_tray->set_tooltip(_("Mt. Sync - rclone GUI"));
@@ -227,7 +227,7 @@ MtSyncDaemon::MtSyncDaemon() {
                     m_manager.rc().unmount_async(m_jobs[index].destination, [this, index, job_uuid](auto) {
                         if (index >= m_jobs.size() || m_jobs[index].id != job_uuid) return;
                         m_jobs[index].active = false;
-                        append_log(std::format("STOPPED   {} [{}] user stopped",
+                        activity_log::append_line(std::format("STOPPED   {} [{}] user stopped",
                             m_jobs[index].id, type_str(m_jobs[index].type)));
                         json response_payload = {{"index", index}, {"success", true}};
                         m_ipc_server->send_to_all(make_response(ipc::ResponseType::JobCompleted, response_payload));
@@ -242,7 +242,7 @@ MtSyncDaemon::MtSyncDaemon() {
                         m_job_state[index].job_id = -1;
                         m_jobs[index].running = false;
                         save_jobs();
-                        append_log(std::format("STOPPED   {} [{}] user stopped",
+                        activity_log::append_line(std::format("STOPPED   {} [{}] user stopped",
                             m_jobs[index].id, type_str(m_jobs[index].type)));
                         m_running_job_count--;
                         if (m_running_job_count < 0) m_running_job_count = 0;
@@ -352,7 +352,7 @@ MtSyncDaemon::MtSyncDaemon() {
                     m_jobs[i].active = false;
                     m_jobs[i].running = false;
                     changed = true;
-                    append_log(std::format("STALE     {} [MOUNT] {} no longer mounted",
+                    activity_log::append_line(std::format("STALE     {} [MOUNT] {} no longer mounted",
                         m_jobs[i].id, m_jobs[i].destination));
                     json rp = {{"index", i}, {"success", false}};
                     m_ipc_server->send_to_all(
@@ -380,6 +380,7 @@ void MtSyncDaemon::stop() {
         s.watcher.reset();
     }
     m_mount_health_timer.disconnect();
+    m_log_prune_timer.disconnect();
     m_job_state.clear();
 
     m_ipc_server.reset();
@@ -520,7 +521,7 @@ void MtSyncDaemon::on_run_job(size_t index, const std::string& trigger) {
         : ((index < m_job_state.size() && m_job_state[index].job_id >= 0)
            || (index < m_job_state.size() && m_job_state[index].submitting));
     if (already_running) {
-        append_log(std::format("SKIPPED   {} [{}] previous instance still running",
+        activity_log::append_line(std::format("SKIPPED   {} [{}] previous instance still running",
             job.id, type_str(job.type)));
         return;
     }
@@ -538,7 +539,7 @@ void MtSyncDaemon::on_run_job(size_t index, const std::string& trigger) {
     }
     save_jobs();
 
-    append_log(std::format("STARTED   {} [{}] {} -> {}{}",
+    activity_log::append_line(std::format("STARTED   {} [{}] {} -> {}{}",
         job.id, type_str(job.type), job.source, job.destination,
         trigger == "watch" ? " (triggered by file watch)" : ""));
 
@@ -562,12 +563,12 @@ void MtSyncDaemon::on_run_job(size_t index, const std::string& trigger) {
                     response_payload["success"] = true;
                     m_jobs[index].active = true;
                     m_ipc_server->send_to_all(make_response(ipc::ResponseType::JobCompleted, response_payload));
-                    append_log(std::format("COMPLETED {} [MOUNT] SUCCESS", m_jobs[index].id));
+                    activity_log::append_line(std::format("COMPLETED {} [MOUNT] SUCCESS", m_jobs[index].id));
                 } else {
                     response_payload["success"] = false;
                     m_jobs[index].active = false;
                     m_ipc_server->send_to_all(make_response(ipc::ResponseType::JobCompleted, response_payload));
-                    append_log(std::format("FAILED    {} [MOUNT] {}",
+                    activity_log::append_line(std::format("FAILED    {} [MOUNT] {}",
                         m_jobs[index].id, result.error()));
                     g_warning("Mount %zu failed: %s", index, result.error().c_str());
                 }
@@ -714,7 +715,7 @@ void MtSyncDaemon::on_run_job(size_t index, const std::string& trigger) {
                 m_jobs[index].last_status = "error";
                 save_jobs();
                 std::string log_suffix = log_path.empty() ? "" : " | log:" + log_path;
-                append_log(std::format("FAILED    {} [{}] {}{}",
+                activity_log::append_line(std::format("FAILED    {} [{}] {}{}",
                     m_jobs[index].id, type_str(m_jobs[index].type),
                     result.error(), log_suffix));
             }
@@ -845,7 +846,7 @@ void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::strin
         // retry budget and isn't delayed by exponential backoff.
         m_job_state[index].bisync_resync_retried = true;
         m_job_state[index].bisync_force_resync = true;
-        append_log(std::format("RETRYING  {} [{}] with --resync (no established bisync baseline)",
+        activity_log::append_line(std::format("RETRYING  {} [{}] with --resync (no established bisync baseline)",
             m_jobs[index].id, type_str(m_jobs[index].type)));
         std::string retry_uuid = m_jobs[index].id;
         Glib::signal_idle().connect_once([this, index, retry_uuid]() {
@@ -866,7 +867,7 @@ void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::strin
             m_job_state[index].retry_count++;
             int shift = std::min(m_job_state[index].retry_count - 1, 4);
             unsigned int delay_ms = std::min(2000u << shift, 60000u);
-            append_log(std::format("RETRYING  {} [{}] attempt {}/{} in {}s",
+            activity_log::append_line(std::format("RETRYING  {} [{}] attempt {}/{} in {}s",
                 m_jobs[index].id, type_str(m_jobs[index].type),
                 m_job_state[index].retry_count, max_retries, delay_ms / 1000));
             std::string retry_uuid = m_jobs[index].id;
@@ -926,7 +927,7 @@ void MtSyncDaemon::on_job_completed(size_t index, bool success, const std::strin
                 s.transfers, format_bytes(s.bytes), format_speed(s.speed),
                 format_duration(s.elapsed_time))
             : std::format("{}{}", error_msg.empty() ? "see log" : error_msg, log_suffix);
-        append_log(std::format("{} {} [{}] {}", state, job.id, type_str(job.type), detail));
+        activity_log::append_line(std::format("{} {} [{}] {}", state, job.id, type_str(job.type), detail));
 
         if (success) {
             if (settings.notify_on_completion)
@@ -996,7 +997,7 @@ void MtSyncDaemon::setup_watch(size_t index) {
         },
         [this, index, job_uuid](const std::string& msg) {
             if (index >= m_jobs.size() || m_jobs[index].id != job_uuid) return;
-            append_log(std::format("FAILED    {} [{}] watch setup: {}",
+            activity_log::append_line(std::format("FAILED    {} [{}] watch setup: {}",
                 m_jobs[index].id, type_str(m_jobs[index].type), msg));
             auto settings = load_settings();
             if (settings.notify_on_errors)

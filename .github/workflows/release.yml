@@ -14,12 +14,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ inputs.tag }}
-      - name: Verify CMakeLists.txt and snapcraft.yaml match the release tag
+      - name: Verify all version references match the release tag
         env:
           TAG: ${{ inputs.tag }}
         run: |
           CMAKE_VERSION=$(grep -oP '(?<=VERSION )\d+\.\d+\.\d+' CMakeLists.txt | head -1)
           SNAP_VERSION=$(grep -oP "(?<=version: ')[^']+" snap/snapcraft.yaml | head -1)
+          ABOUT_VERSION=$(grep -oP 'version_row, "\K[^"]+' src/views/about_view.cpp | head -1)
           FAILED=0
           if [[ "$CMAKE_VERSION" != "$TAG" ]]; then
             echo "::error::CMakeLists.txt PROJECT_VERSION ($CMAKE_VERSION) does not match release tag ($TAG)"
@@ -27,6 +28,14 @@ jobs:
           fi
           if [[ "$SNAP_VERSION" != "$TAG" ]]; then
             echo "::error::snap/snapcraft.yaml version ($SNAP_VERSION) does not match release tag ($TAG)"
+            FAILED=1
+          fi
+          if [[ "$ABOUT_VERSION" != "$TAG" ]]; then
+            echo "::error::src/views/about_view.cpp version ($ABOUT_VERSION) does not match release tag ($TAG)"
+            FAILED=1
+          fi
+          if ! grep -q "<release version=\"${TAG}\"" data/com.mtsync.MtSync.metainfo.xml; then
+            echo "::error::data/com.mtsync.MtSync.metainfo.xml has no <release version=\"${TAG}\"> entry"
             FAILED=1
           fi
           exit "$FAILED"

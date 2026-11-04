@@ -17,9 +17,11 @@
  */
 
 #include "views/settings_view.hpp"
+#include "log/activity_log.hpp"
 #include "sandbox.hpp"
 #include "widgets/adw_wrapper.hpp"
 #include <adwaita.h>
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <format>
@@ -50,6 +52,7 @@ SettingsView::~SettingsView() {
     g_signal_handler_disconnect(m_notify_start_row->gobj(),     m_sig_notify_start);
     g_signal_handler_disconnect(m_notify_completion_row->gobj(),m_sig_notify_completion);
     g_signal_handler_disconnect(m_notify_errors_row->gobj(),    m_sig_notify_errors);
+    g_signal_handler_disconnect(m_log_retention_row->gobj(),    m_sig_log_retention);
 }
 
 void SettingsView::save() {
@@ -182,6 +185,27 @@ void SettingsView::setup_ui() {
     adw::entry_row_set_text(m_watch_max_wait_row,
         std::format("{}", m_settings.watch_max_wait_ms).c_str());
     adw::preferences_group_add(transfers_group, m_watch_max_wait_row);
+
+    // ── Activity Log ──────────────────────────────────────────────────────────
+    auto* log_group = adw::preferences_group();
+    adw::preferences_group_set_title(log_group, _("Activity Log"));
+    vbox->append(*log_group);
+
+    m_log_retention_row = adw::entry_row();
+    adw::preferences_row_set_title(m_log_retention_row, _("Delete entries older than (days)"));
+    m_log_retention_row->set_tooltip_text(_("Automatically delete activity log entries and their error log files older than this many days. Enter 0 to keep everything."));
+    adw::entry_row_set_text(m_log_retention_row,
+        std::format("{}", m_settings.activity_log_retention_days).c_str());
+    adw::preferences_group_add(log_group, m_log_retention_row);
+
+    auto* log_hint = Gtk::make_managed<Gtk::Label>(
+        _("0 keeps all entries. Old entries and error log files are removed daily and when this value changes."));
+    log_hint->add_css_class("dim-label");
+    log_hint->set_xalign(0.0f);
+    log_hint->set_margin_start(12);
+    log_hint->set_margin_top(4);
+    log_hint->set_wrap(true);
+    vbox->append(*log_hint);
 
     // ── rclone ────────────────────────────────────────────────────────────────
     auto* rclone_group = adw::preferences_group();
@@ -338,6 +362,30 @@ void SettingsView::setup_ui() {
                 adw::switch_row_get_active(self->m_notify_errors_row);
             self->save();
         }), this);
+
+    m_sig_log_retention = g_signal_connect(m_log_retention_row->gobj(), "changed",
+        G_CALLBACK(+[](GtkEditable*, gpointer data) {
+            auto* self = static_cast<SettingsView*>(data);
+            try {
+                int v = std::stoi(adw::entry_row_get_text(self->m_log_retention_row));
+                if (v >= 0) self->m_settings.activity_log_retention_days = std::min(v, 36500);
+            } catch (...) {}
+            self->save();
+        }), this);
+
+    // Only prune once editing is committed: pruning on every keystroke could
+    // delete entries using a half-typed value ("3" on the way to "30").
+    g_signal_connect(m_log_retention_row->gobj(), "apply",
+        G_CALLBACK(+[](AdwEntryRow*, gpointer data) {
+            auto* self = static_cast<SettingsView*>(data);
+            activity_log::prune(self->m_settings.activity_log_retention_days);
+        }), this);
+
+    // Also prune when leaving the Settings page, so a value typed without
+    // pressing Enter still takes effect without waiting for the daily check.
+    signal_unmap().connect([this]() {
+        activity_log::prune(m_settings.activity_log_retention_days);
+    });
 }
 
 } // namespace mtsync

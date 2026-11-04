@@ -4,9 +4,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: MtSync 0.9.25\n"
+"Project-Id-Version: MtSync 0.9.26\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-26 09:08+1000\n"
+"POT-Creation-Date: 2026-11-05 05:15+1000\n"
 "PO-Revision-Date: 2026-09-07 10:31+1000\n"
 "Last-Translator: Mt. Sync contributors <noreply@github.com>\n"
 "Language-Team: French <https://github.com/gavindi/MtSync>\n"
@@ -16,23 +16,23 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:138
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:139
 msgid "Mt. Sync - rclone GUI"
 msgstr "Mt. Sync - interface rclone"
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:550
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:548
 msgid "Job Started"
 msgstr "Tâche démarrée"
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:936
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:934
 msgid "Sync Complete"
 msgstr "Synchronisation terminée"
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:939
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:937
 msgid "Sync Failed"
 msgstr "Échec de la synchronisation"
 
-#: /home/ggraham/Projects/MtSync/src/daemon.cpp:1006
+#: /home/ggraham/Projects/MtSync/src/daemon.cpp:1004
 msgid "Watch Setup Failed"
 msgstr ""
 
@@ -105,7 +105,7 @@ msgid "Remote Settings"
 msgstr "Paramètres du distant"
 
 #: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:86
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:328
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:381
 msgid "Name"
 msgstr "Nom"
 
@@ -141,61 +141,66 @@ msgstr "Options"
 msgid "Advanced Options"
 msgstr "Options avancées"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:242
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:814
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:247
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:817
 msgid "Update"
 msgstr "Mettre à jour"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:242
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:247
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:549
 msgid "Save"
 msgstr "Enregistrer"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:244
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:249
 msgid "Save the remote configuration and return to the remotes list"
 msgstr ""
 "Enregistrer la configuration du distant et revenir à la liste des distants"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:248
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:253
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:257
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:312
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:322
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:555
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:888
 msgid "Cancel"
 msgstr "Annuler"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:249
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:254
 msgid "Discard all unsaved changes and return to the remotes list"
 msgstr ""
 "Abandonner toutes les modifications non enregistrées et revenir à la liste "
 "des distants"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:345
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:350
 msgid "Authorize"
 msgstr "Autoriser"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:446
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:451
 msgid "Waiting..."
 msgstr "En attente…"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:450
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:455
 msgid "Browser opened — complete sign-in to continue..."
 msgstr "Navigateur ouvert — terminez la connexion pour continuer…"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:463
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:468
 msgid "Authorized"
 msgstr "Autorisé"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:466
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:471
 msgid "Authorization successful."
 msgstr "Autorisation réussie."
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:468
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:473
 msgid "Retry"
 msgstr "Réessayer"
 
-#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:469
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:474
 msgid "Authorization failed: "
 msgstr "Échec de l'autorisation : "
+
+#: /home/ggraham/Projects/MtSync/src/views/backend_edit_view.cpp:503
+msgid "Could not save remote: "
+msgstr "Impossible d'enregistrer le distant : "
 
 #: /home/ggraham/Projects/MtSync/src/views/backends_view.cpp:99
 msgid "of"
@@ -260,10 +265,10 @@ msgid "Edit Remote"
 msgstr "Modifier le distant"
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:75
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:175
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:812
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:185
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:815
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:134
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:119
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:121
 msgid "Copy"
 msgstr "Copier"
 
@@ -276,10 +281,10 @@ msgstr ""
 "créant une nouvelle tâche de copie rclone"
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:83
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:176
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:817
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:186
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:820
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:135
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:121
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:123
 msgid "Move"
 msgstr "Déplacer"
 
@@ -292,9 +297,9 @@ msgstr ""
 "de la source en créant une nouvelle tâche de déplacement rclone"
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:91
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:174
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:184
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:133
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:117
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:119
 msgid "Sync"
 msgstr "Synchroniser"
 
@@ -308,9 +313,9 @@ msgstr ""
 "la destination"
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:99
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:177
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:187
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:136
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:123
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:125
 msgid "Mount"
 msgstr "Monter"
 
@@ -335,7 +340,8 @@ msgstr ""
 
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:129
 #: /home/ggraham/Projects/MtSync/src/views/browser_view.cpp:258
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:819
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:822
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:889
 msgid "Delete"
 msgstr "Supprimer"
 
@@ -390,7 +396,7 @@ msgstr "Les fichiers sélectionnés seront définitivement supprimés."
 msgid "Dry Run Preview"
 msgstr "Aperçu de l'essai à blanc"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:202
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:212
 msgid ""
 "Permanently delete the selected files from the source directory — this "
 "cannot be undone"
@@ -398,17 +404,17 @@ msgstr ""
 "Supprimer définitivement les fichiers sélectionnés du répertoire source — "
 "cette action est irréversible"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:205
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:215
 msgid "Copy →"
 msgstr "Copier →"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:207
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:217
 msgid "Copy the selected source-only files into the destination directory"
 msgstr ""
 "Copier les fichiers sélectionnés présents uniquement dans la source vers le "
 "répertoire de destination"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:224
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:234
 msgid ""
 "Toggle visibility of files that exist only in the source (left pane) and are "
 "absent from the destination"
@@ -416,7 +422,7 @@ msgstr ""
 "Afficher ou masquer les fichiers présents uniquement dans la source (panneau "
 "gauche) et absents de la destination"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:230
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:240
 msgid ""
 "Toggle visibility of files that exist only in the destination (right pane) "
 "and are absent from the source"
@@ -424,13 +430,13 @@ msgstr ""
 "Afficher ou masquer les fichiers présents uniquement dans la destination "
 "(panneau droit) et absents de la source"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:236
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:246
 msgid ""
 "Toggle visibility of files that are identical in both source and destination"
 msgstr ""
 "Afficher ou masquer les fichiers identiques dans la source et la destination"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:242
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:252
 msgid ""
 "Toggle visibility of files present in both directories whose content or size "
 "differs"
@@ -438,7 +444,7 @@ msgstr ""
 "Afficher ou masquer les fichiers présents dans les deux répertoires dont le "
 "contenu ou la taille diffère"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:248
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:258
 msgid ""
 "Toggle visibility of files that could not be compared due to a read or "
 "permission error"
@@ -446,17 +452,17 @@ msgstr ""
 "Afficher ou masquer les fichiers qui n'ont pas pu être comparés en raison "
 "d'une erreur de lecture ou de permission"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:265
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:275
 msgid "← Copy"
 msgstr "← Copier"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:267
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:277
 msgid "Copy the selected destination-only files back into the source directory"
 msgstr ""
 "Copier les fichiers sélectionnés présents uniquement dans la destination "
 "vers le répertoire source"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:274
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:284
 msgid ""
 "Permanently delete the selected files from the destination directory — this "
 "cannot be undone"
@@ -464,128 +470,128 @@ msgstr ""
 "Supprimer définitivement les fichiers sélectionnés du répertoire de "
 "destination — cette action est irréversible"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:303
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:313
 msgid "Running dry run…"
 msgstr "Essai à blanc en cours…"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:303
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:313
 msgid "Comparing…"
 msgstr "Comparaison…"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:307
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:317
 msgid "Large scans can take a long time"
 msgstr "Les analyses importantes peuvent prendre du temps"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:316
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:326
 msgid "Cancel the dry run and close this dialog"
 msgstr "Annuler l'essai à blanc et fermer cette boîte de dialogue"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:317
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:327
 msgid "Cancel the comparison scan and close this dialog"
 msgstr "Annuler l'analyse de comparaison et fermer cette boîte de dialogue"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:360
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:363
 msgid "Show the previous page of comparison results"
 msgstr "Afficher la page précédente des résultats de comparaison"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:372
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:375
 msgid "Show the next page of comparison results"
 msgstr "Afficher la page suivante des résultats de comparaison"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:397
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:400
 msgid "Nothing to Do"
 msgstr "Rien à faire"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:399
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:402
 msgid ""
 "The dry run found no changes to make: the destination is already up to date."
 msgstr ""
 "L'essai à blanc n'a trouvé aucune modification à effectuer : la destination "
 "est déjà à jour."
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:586
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:594
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:589
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:597
 msgid "Filename"
 msgstr "Nom de fichier"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:587
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:595
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:352
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:590
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:598
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:407
 msgid "Size"
 msgstr "Taille"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:588
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:596
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:377
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:591
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:599
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:432
 msgid "Modified"
 msgstr "Modifié"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:591
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:594
 msgid "Action"
 msgstr "Action"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:613
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:864
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:710
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:736
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:616
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:867
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:731
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:757
 msgid "Error: "
 msgstr "Erreur : "
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:821
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:824
 msgid "Delete from source"
 msgstr "Supprimer de la source"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:823
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:826
 msgid "Error"
 msgstr "Erreur"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:835
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:838
 #, c++-format
 msgid "{} file to copy"
 msgid_plural "{} files to copy"
 msgstr[0] "{} fichier à copier"
 msgstr[1] "{} fichiers à copier"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:838
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:841
 #, c++-format
 msgid "{} file to update"
 msgid_plural "{} files to update"
 msgstr[0] "{} fichier à mettre à jour"
 msgstr[1] "{} fichiers à mettre à jour"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:841
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:844
 #, c++-format
 msgid "{} file to move"
 msgid_plural "{} files to move"
 msgstr[0] "{} fichier à déplacer"
 msgstr[1] "{} fichiers à déplacer"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:844
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:847
 #, c++-format
 msgid "{} file to delete"
 msgid_plural "{} files to delete"
 msgstr[0] "{} fichier à supprimer"
 msgstr[1] "{} fichiers à supprimer"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:847
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:850
 #, c++-format
 msgid "{} file to delete from the source"
 msgid_plural "{} files to delete from the source"
 msgstr[0] "{} fichier à supprimer de la source"
 msgstr[1] "{} fichiers à supprimer de la source"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:851
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:854
 #, c++-format
 msgid "{} error"
 msgid_plural "{} errors"
 msgstr[0] "{} erreur"
 msgstr[1] "{} erreurs"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:860
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:863
 msgid "Dry run complete. Nothing was changed."
 msgstr "Essai à blanc terminé. Rien n'a été modifié."
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:861
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:864
 #, c++-format
 msgid ""
 "Dry run complete. Nothing was changed. If run, this job would affect: {}"
@@ -593,15 +599,15 @@ msgstr ""
 "Essai à blanc terminé. Rien n'a été modifié. Si elle était exécutée, cette "
 "tâche concernerait : {}"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:924
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:492
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:927
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:561
 #, c++-format
 msgid "{} file"
 msgid_plural "{} files"
 msgstr[0] "{} fichier"
 msgstr[1] "{} fichiers"
 
-#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:926
+#: /home/ggraham/Projects/MtSync/src/views/compare_dialog.cpp:929
 #, c++-format
 msgid "Page {} of {}  ({})"
 msgstr "Page {} sur {}  ({})"
@@ -647,7 +653,7 @@ msgid "Job Configuration"
 msgstr "Configuration de la tâche"
 
 #: /home/ggraham/Projects/MtSync/src/views/job_edit_dialog.cpp:138
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:230
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:251
 #: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:62
 msgid "Type"
 msgstr "Type"
@@ -966,53 +972,58 @@ msgstr ""
 "ce qui changerait. Rien n'est modifié, quelle que soit la position de "
 "l'option Essai à blanc."
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:62
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:64
 msgid "success"
 msgstr "réussie"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:63
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:65
 msgid "error"
 msgstr "en échec"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:64
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:66
 msgid "stopped"
 msgstr "arrêtée"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:65
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:67
 msgid "running"
 msgstr "en cours"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:106
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:108
 #: /home/ggraham/Projects/MtSync/src/window.cpp:58
 msgid "Jobs"
 msgstr "Tâches"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:111
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:113
 msgid "Add a new sync, copy, move, or mount job"
 msgstr ""
 "Ajouter une nouvelle tâche de synchronisation, de copie, de déplacement ou "
 "de montage"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:141
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:149
 msgid "Activity log (Double click for details)"
 msgstr "Journal d'activité (Double-cliquez pour les détails)"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:170
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:162
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:855
+msgid "Delete the selected activity log entries"
+msgstr "Supprimer les entrées du journal d'activité sélectionnées"
+
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:191
 #: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:59
 msgid "Time"
 msgstr "Heure"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:196
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:217
 #: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:60
 msgid "State"
 msgstr "État"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:214
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:235
 #: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:61
 msgid "Job ID"
 msgstr "ID de la tâche"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:251
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:272
 #: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:126
 msgid "Open the activity log file for this job in the default application"
 msgstr ""
@@ -1020,29 +1031,29 @@ msgstr ""
 "défautOuvrir le fichier journal d'activité de cette tâche dans l'application "
 "par défaut"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:274
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:295
 msgid "Activity"
 msgstr "Activité"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:463
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:484
 msgid "Run this job immediately"
 msgstr "Exécuter immédiatement cette tâche"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:472
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:493
 msgid "Stop this job while it is running"
 msgstr "Arrêter cette tâche pendant son exécution"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:479
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:500
 msgid "Edit this job's configuration, schedule, and advanced settings"
 msgstr ""
 "Modifier la configuration, la planification et les paramètres avancés de "
 "cette tâche"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:487
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:508
 msgid "Permanently delete this job from the list"
 msgstr "Supprimer définitivement cette tâche de la liste"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:495
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:516
 msgid ""
 "Show or hide this job's details, including source path, destination path, "
 "and UUID"
@@ -1050,55 +1061,99 @@ msgstr ""
 "Afficher ou masquer les détails de cette tâche, y compris le chemin source, "
 "le chemin de destination et l'UUID"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:550
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:571
 msgid "Last run: "
 msgstr "Dernière exécution : "
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:575
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:586
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:717
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:596
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:607
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:738
 msgid "Mounted"
 msgstr "Monté"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:581
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:717
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:602
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:738
 msgid "Running..."
 msgstr "En cours…"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:688
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:878
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:709
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:988
 msgid "Starting..."
 msgstr "Démarrage…"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:700
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:727
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:721
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:748
 msgid "Error: not connected to daemon"
 msgstr "Erreur : non connecté au démon"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:738
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:960
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:759
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:1070
 msgid "Stopped"
 msgstr "Arrêté"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:895
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:859
+#, c-format
+msgid "Delete %u selected activity log entry"
+msgid_plural "Delete %u selected activity log entries"
+msgstr[0] "Supprimer %u entrée du journal d'activité sélectionnée"
+msgstr[1] "Supprimer %u entrées du journal d'activité sélectionnées"
+
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:880
+#, c-format
+msgid ""
+"The selected log entry will be permanently removed from the activity log. "
+"Any linked error log file is deleted too."
+msgid_plural ""
+"%u selected log entries will be permanently removed from the activity log. "
+"Any linked error log files are deleted too."
+msgstr[0] ""
+"L'entrée sélectionnée sera définitivement supprimée du journal d'activité. "
+"Le fichier journal d'erreurs associé sera également supprimé."
+msgstr[1] ""
+"%u entrées sélectionnées seront définitivement supprimées du journal "
+"d'activité. Les fichiers journaux d'erreurs associés seront également "
+"supprimés."
+
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:886
+msgid "Delete Log Entries?"
+msgstr "Supprimer les entrées du journal ?"
+
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:923
+msgid "Could Not Update the Activity Log"
+msgstr "Impossible de mettre à jour le journal d'activité"
+
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:924
+msgid ""
+"The activity log file could not be rewritten, so the selected entries were "
+"not deleted."
+msgstr ""
+"Le fichier du journal d'activité n'a pas pu être réécrit ; les entrées "
+"sélectionnées n'ont pas été supprimées."
+
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:925
+#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:134
+msgid "Close"
+msgstr ""
+
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:1005
 msgid "file"
 msgid_plural "files"
 msgstr[0] "fichier"
 msgstr[1] "fichiers"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:899
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:1009
 msgid "ETA"
 msgstr "ETA"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:917
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:1027
 msgid "Last run: success"
 msgstr "Dernière exécution : réussie"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:930
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:1040
 msgid "Last run: error"
 msgstr "Dernière exécution : échec"
 
-#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:960
+#: /home/ggraham/Projects/MtSync/src/views/job_view.cpp:1070
 msgid "Unmounted"
 msgstr "Démonté"
 
@@ -1114,19 +1169,15 @@ msgstr "Impossible de lire le fichier journal : "
 msgid "Open in default app"
 msgstr "Ouvrir dans l'application par défaut"
 
-#: /home/ggraham/Projects/MtSync/src/views/log_view_dialog.cpp:134
-msgid "Close"
-msgstr ""
-
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:99
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:102
 msgid "Notifications"
 msgstr "Notifications"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:103
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:106
 msgid "On Job Start"
 msgstr "Au démarrage d'une tâche"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:104
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:107
 msgid ""
 "Show a desktop notification whenever a sync, copy, move, or mount job begins "
 "running"
@@ -1134,20 +1185,20 @@ msgstr ""
 "Afficher une notification de bureau lorsqu'une tâche de synchronisation, de "
 "copie, de déplacement ou de montage commence"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:109
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:112
 msgid "On Completion"
 msgstr "À la fin"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:110
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:113
 msgid "Show a desktop notification when a job finishes successfully"
 msgstr ""
 "Afficher une notification de bureau lorsqu'une tâche se termine avec succès"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:115
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:118
 msgid "On Completion with Errors/Warnings"
 msgstr "À la fin avec erreurs/avertissements"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:116
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:119
 msgid ""
 "Show a desktop notification when a job finishes but encountered errors or "
 "warnings during the transfer"
@@ -1155,15 +1206,15 @@ msgstr ""
 "Afficher une notification de bureau lorsqu'une tâche se termine mais a "
 "rencontré des erreurs ou des avertissements pendant le transfert"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:122
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:125
 msgid "Start Up & Shut Down"
 msgstr "Démarrage et arrêt"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:126
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:129
 msgid "Start daemon on login"
 msgstr "Démarrer le démon à la connexion"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:127
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:130
 msgid ""
 "Automatically start the Mt. Sync background daemon when you log in, so "
 "scheduled jobs run even when the app window is closed"
@@ -1172,11 +1223,11 @@ msgstr ""
 "connexion, afin que les tâches planifiées s'exécutent même lorsque la "
 "fenêtre de l'application est fermée"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:132
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:135
 msgid "Start minimized to tray"
 msgstr "Démarrer réduit dans la barre d'état système"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:133
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:136
 msgid ""
 "Launch Mt. Sync with the window hidden; the app appears only as a system "
 "tray icon until you open it"
@@ -1184,11 +1235,11 @@ msgstr ""
 "Lancer Mt. Sync avec la fenêtre masquée ; l'application n'apparaît que comme "
 "icône de barre d'état système jusqu'à ce que vous l'ouvriez"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:138
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:141
 msgid "Shutdown daemon when closing application"
 msgstr "Arrêter le démon à la fermeture de l'application"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:139
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:142
 msgid ""
 "Stop the background daemon and all running jobs when the app window is "
 "closed; when off, the daemon keeps running and scheduled jobs continue in "
@@ -1198,19 +1249,19 @@ msgstr ""
 "fermeture de la fenêtre de l'application ; si désactivé, le démon continue "
 "de s'exécuter et les tâches planifiées se poursuivent en arrière-plan"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:145
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:148
 msgid "Transfers"
 msgstr "Transferts"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:149
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:152
 msgid "Default bandwidth limit (e.g. 10M)"
 msgstr "Limite de bande passante par défaut (ex. 10M)"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:155
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:158
 msgid "Verify checksums"
 msgstr "Vérifier les sommes de contrôle"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:156
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:159
 msgid ""
 "Verify file integrity using checksums during transfers — slower but "
 "guarantees bit-perfect copies"
@@ -1218,49 +1269,74 @@ msgstr ""
 "Vérifier l'intégrité des fichiers à l'aide de sommes de contrôle pendant les "
 "transferts — plus lent mais garantit des copies identiques au bit près"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:161
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:164
 msgid "Parallel transfers"
 msgstr "Transferts parallèles"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:167
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:170
 msgid "Retries on failure"
 msgstr "Nouvelles tentatives en cas d'échec"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:173
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:176
 msgid "Watch mode debounce (ms)"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:174
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:177
 msgid ""
 "How long to wait after the last detected file change before syncing a job "
 "with \"Watch for Changes\" enabled — default per job unless overridden"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:180
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:183
 msgid "Watch mode max wait (ms)"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:181
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:184
 msgid ""
 "Upper bound on how long a burst of file changes can keep postponing a watch-"
 "triggered sync — guarantees a sync still runs periodically during a "
 "sustained storm of changes"
 msgstr ""
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:192
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:191
+msgid "Activity Log"
+msgstr "Journal d'activité"
+
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:195
+msgid "Delete entries older than (days)"
+msgstr "Supprimer les entrées plus anciennes que (jours)"
+
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:196
+msgid ""
+"Automatically delete activity log entries and their error log files older "
+"than this many days. Enter 0 to keep everything."
+msgstr ""
+"Supprime automatiquement les entrées du journal d'activité et leurs fichiers "
+"journaux d'erreurs plus anciens que ce nombre de jours. Saisissez 0 pour tout "
+"conserver."
+
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:202
+msgid ""
+"0 keeps all entries. Old entries and error log files are removed daily and "
+"when this value changes."
+msgstr ""
+"0 conserve toutes les entrées. Les anciennes entrées et les fichiers journaux "
+"d'erreurs sont supprimés quotidiennement et lorsque cette valeur change."
+
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:216
 msgid "rclone binary path"
 msgstr "Chemin du binaire rclone"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:198
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:222
 msgid "Leave empty to use PATH lookup. Restart required."
 msgstr ""
 "Laissez vide pour utiliser la recherche dans le PATH. Redémarrage requis."
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:206
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:230
 msgid "Global rclone flags"
 msgstr "Indicateurs rclone globaux"
 
-#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:212
+#: /home/ggraham/Projects/MtSync/src/views/settings_view.cpp:236
 msgid ""
 "Added to every job at execution time (e.g. --log-level DEBUG --checkers 8)."
 msgstr ""
@@ -1381,68 +1457,79 @@ msgstr ""
 msgid "Done"
 msgstr "Terminé"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:115
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:96
+msgid "Can't be read: permission denied or unavailable"
+msgstr ""
+
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:165
 msgid "No Remote Selected"
 msgstr "Aucun distant sélectionné"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:116
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:166
 msgid "Choose a remote from the dropdown above."
 msgstr "Choisissez un distant dans la liste déroulante ci-dessus."
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:130
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:180
 msgid "Empty Folder"
 msgstr "Dossier vide"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:131
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:181
 msgid "This directory contains no files."
 msgstr "Ce répertoire ne contient aucun fichier."
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:136
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:473
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:186
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:538
 msgid "Unable to Connect"
 msgstr "Connexion impossible"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:137
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:187
 msgid "The remote did not respond. Check the connection and try again."
 msgstr "Le distant n'a pas répondu. Vérifiez la connexion et réessayez."
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:162
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:212
 msgid "Show hidden files"
 msgstr "Afficher les fichiers cachés"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:232
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:507
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:282
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:581
 msgid "Local"
 msgstr "Local"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:245
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:295
 msgid "Navigate back to the previous directory in history"
 msgstr "Revenir au répertoire précédent de l'historique"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:252
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:302
 msgid "Navigate up to the parent directory"
 msgstr "Remonter au répertoire parent"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:268
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:318
 msgid "Reload the current directory listing from the remote"
 msgstr "Recharger la liste du répertoire actuel depuis le distant"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:470
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:535
 msgid "Unable to Read Directory"
 msgstr "Impossible de lire le répertoire"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:494
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:563
 #, c++-format
 msgid "{} folder"
 msgid_plural "{} folders"
 msgstr[0] "{} dossier"
 msgstr[1] "{} dossiers"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:497
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:566
 msgid "Total"
 msgstr "Total"
 
-#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:508
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:569
+#, c++-format
+msgid "{} inaccessible"
+msgid_plural "{} inaccessible"
+msgstr[0] ""
+msgstr[1] ""
+
+#: /home/ggraham/Projects/MtSync/src/widgets/browser_pane.cpp:582
 msgid "Remote"
 msgstr "Distant"
 
@@ -1461,9 +1548,3 @@ msgstr "Paramètres"
 #: /home/ggraham/Projects/MtSync/src/window.cpp:70
 msgid "About"
 msgstr "À propos"
-
-#~ msgid "Could not save remote: "
-#~ msgstr "Impossible d'enregistrer le distant : "
-
-#~ msgid "Activity Log"
-#~ msgstr "Journal d'activité"

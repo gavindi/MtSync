@@ -61,7 +61,8 @@ public:
         const std::string& job_id,
         const std::string& job_type,
         const std::string& contents,
-        const std::string& log_path = "");
+        const std::string& log_path = "",
+        const std::string& raw_line = "");
 
     Glib::Property<Glib::ustring> property_time    {*this, "time"};
     Glib::Property<Glib::ustring> property_state   {*this, "state"};
@@ -69,6 +70,7 @@ public:
     Glib::Property<Glib::ustring> property_job_type{*this, "job-type"};
     Glib::Property<Glib::ustring> property_contents{*this, "contents"};
     Glib::Property<Glib::ustring> property_log_path{*this, "log-path"};
+    Glib::Property<Glib::ustring> property_raw_line{*this, "raw-line"};
 
 protected:
     LogEntry();
